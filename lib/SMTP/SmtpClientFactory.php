@@ -60,7 +60,7 @@ class SmtpClientFactory {
 			'port' => $mailAccount->getOutboundPort(),
 			'username' => $mailAccount->getOutboundUser(),
 			'secure' => $security === 'none' ? false : $security,
-			'timeout' => (int)$this->config->getSystemValue('app.mail.smtp.timeout', 20),
+			'timeout' => (int)$this->config->getSystemValue('app.mail.smtp.timeout', 5),
 			'context' => [
 				'ssl' => [
 					'verify_peer' => $this->config->getSystemValueBool('app.mail.verify-tls-peer', true),

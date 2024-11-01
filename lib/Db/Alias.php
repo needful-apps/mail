@@ -56,12 +56,12 @@ class Alias extends Entity implements JsonSerializable {
 	protected $smimeCertificateId;
 
 	public function __construct() {
-		$this->addType('accountId', 'integer');
+		$this->addType('accountId', 'int');
 		$this->addType('name', 'string');
 		$this->addType('alias', 'string');
-		$this->addType('provisioningId', 'integer');
-		$this->addType('signatureMode', 'integer');
-		$this->addType('smimeCertificateId', 'integer');
+		$this->addType('provisioningId', 'int');
+		$this->addType('signatureMode', 'int');
+		$this->addType('smimeCertificateId', 'int');
 	}
 
 	public function isProvisioned(): bool {

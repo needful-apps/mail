@@ -55,7 +55,6 @@ OC.L10N.register(
     "Date" : "Deiz",
     "Tags" : "Klavioù",
     "Clear" : "Netaat",
-    "Actions" : "Oberoù",
     "Client ID" : "ID kliant",
     "User" : "Implijer",
     "Host" : "Ostiz",

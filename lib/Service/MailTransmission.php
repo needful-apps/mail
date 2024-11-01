@@ -66,7 +66,7 @@ class MailTransmission implements IMailTransmission {
 		private LoggerInterface $logger,
 		private PerformanceLogger $performanceLogger,
 		private AliasesService $aliasesService,
-		private TransmissionService $transmissionService,
+		private TransmissionService $transmissionService
 	) {
 	}
 
@@ -124,8 +124,7 @@ class MailTransmission implements IMailTransmission {
 		$mimePart = $mimeMessage->build(
 			$localMessage->isHtml(),
 			$localMessage->getBody(),
-			$attachmentParts,
-			$localMessage->isPgpMime() === true
+			$attachmentParts
 		);
 
 		// TODO: add smimeEncrypt check if implemented
@@ -349,7 +348,7 @@ class MailTransmission implements IMailTransmission {
 		}
 
 		if (count($fetchResults) < 1) {
-			throw new ServiceException('Message "' . $message->getId() . '" not found.');
+			throw new ServiceException('Message "' .$message->getId() . '" not found.');
 		}
 
 		$imapDate = $fetchResults[0]->getImapDate();
@@ -361,7 +360,7 @@ class MailTransmission implements IMailTransmission {
 		$originalRecipient = $mdnHeaders->getHeader('original-recipient');
 
 		if ($dispositionNotificationTo === null) {
-			throw new ServiceException('Message "' . $message->getId() . '" has no disposition-notification-to header.');
+			throw new ServiceException('Message "' .$message->getId() . '" has no disposition-notification-to header.');
 		}
 
 		$headers = new Horde_Mime_Headers();

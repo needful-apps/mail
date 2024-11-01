@@ -55,7 +55,6 @@ class DraftsController extends Controller {
 	 * @param string $body
 	 * @param string $editorBody
 	 * @param bool $isHtml
-	 * @param bool $isPgpMime
 	 * @param bool $smimeSign
 	 * @param bool $smimeEncrypt
 	 * @param array<int, string[]> $to i. e. [['label' => 'Linus', 'email' => 'tent@stardewvalley.com'], ['label' => 'Pierre', 'email' => 'generalstore@stardewvalley.com']]
@@ -74,24 +73,23 @@ class DraftsController extends Controller {
 	 */
 	#[TrapError]
 	public function create(
-		int $accountId,
-		string $subject,
-		string $body,
-		string $editorBody,
-		bool $isHtml,
+		int     $accountId,
+		string  $subject,
+		string  $body,
+		string  $editorBody,
+		bool    $isHtml,
 		?bool $smimeSign,
 		?bool $smimeEncrypt,
-		array $to = [],
-		array $cc = [],
-		array $bcc = [],
-		array $attachments = [],
-		?int $aliasId = null,
+		array   $to = [],
+		array   $cc = [],
+		array   $bcc = [],
+		array   $attachments = [],
+		?int    $aliasId = null,
 		?string $inReplyToMessageId = null,
 		?int $smimeCertificateId = null,
 		?int $sendAt = null,
 		?int $draftId = null,
-		bool $requestMdn = false,
-		bool $isPgpMime = false) : JsonResponse {
+		bool $requestMdn = false) : JsonResponse {
 		$account = $this->accountService->find($this->userId, $accountId);
 		if ($draftId !== null) {
 			$this->service->handleDraft($account, $draftId);
@@ -110,7 +108,6 @@ class DraftsController extends Controller {
 		$message->setSmimeSign($smimeSign);
 		$message->setSmimeEncrypt($smimeEncrypt);
 		$message->setRequestMdn($requestMdn);
-		$message->setPgpMime($isPgpMime);
 
 		if (!empty($smimeCertificateId)) {
 			$smimeCertificate = $this->smimeService->findCertificate($smimeCertificateId, $this->userId);
@@ -131,7 +128,6 @@ class DraftsController extends Controller {
 	 * @param string $body
 	 * @param string $editorBody
 	 * @param bool $isHtml
-	 * @param bool $isPgpMime
 	 * @param bool $failed
 	 * @param array<int, string[]> $to i. e. [['label' => 'Linus', 'email' => 'tent@stardewvalley.com'], ['label' => 'Pierre', 'email' => 'generalstore@stardewvalley.com']]
 	 * @param array<int, string[]> $cc
@@ -144,24 +140,23 @@ class DraftsController extends Controller {
 	 */
 	#[TrapError]
 	public function update(int $id,
-		int $accountId,
-		string $subject,
-		string $body,
-		string $editorBody,
-		bool $isHtml,
+		int     $accountId,
+		string  $subject,
+		string  $body,
+		string  $editorBody,
+		bool    $isHtml,
 		?bool $smimeSign,
 		?bool $smimeEncrypt,
-		bool $failed = false,
-		array $to = [],
-		array $cc = [],
-		array $bcc = [],
-		array $attachments = [],
-		?int $aliasId = null,
+		bool    $failed = false,
+		array   $to = [],
+		array   $cc = [],
+		array   $bcc = [],
+		array   $attachments = [],
+		?int    $aliasId = null,
 		?string $inReplyToMessageId = null,
 		?int $smimeCertificateId = null,
 		?int $sendAt = null,
-		bool $requestMdn = false,
-		bool $isPgpMime = false): JsonResponse {
+		bool $requestMdn = false): JsonResponse {
 		$message = $this->service->getMessage($id, $this->userId);
 		$account = $this->accountService->find($this->userId, $accountId);
 
@@ -179,7 +174,6 @@ class DraftsController extends Controller {
 		$message->setSmimeSign($smimeSign);
 		$message->setSmimeEncrypt($smimeEncrypt);
 		$message->setRequestMdn($requestMdn);
-		$message->setPgpMime($isPgpMime);
 
 		if (!empty($smimeCertificateId)) {
 			$smimeCertificate = $this->smimeService->findCertificate($smimeCertificateId, $this->userId);

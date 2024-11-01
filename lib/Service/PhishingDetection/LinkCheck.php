@@ -41,8 +41,8 @@ class LinkCheck {
 	}
 
 	private function parse(string $url): string {
-		if (!str_contains($url, '://')) {
-			return 'http://' . $url;
+		if(!str_contains($url, '://')) {
+			return 'http://'.$url;
 		}
 		return $url;
 	}
@@ -60,9 +60,6 @@ class LinkCheck {
 		foreach ($anchors as $anchor) {
 			$href = $anchor->getAttribute('href');
 			$linkText = $this->getInnerText($anchor);
-			if ($href === '') {
-				continue;
-			}
 			$zippedArray[] = [
 				'href' => $href,
 				'linkText' => $linkText
@@ -71,8 +68,8 @@ class LinkCheck {
 		foreach ($zippedArray as $zipped) {
 			$un = new Normalizer($zipped['href']);
 			$url = $un->normalize();
-			if ($this->textLooksLikeALink($zipped['linkText'])) {
-				if (parse_url($this->parse($url), PHP_URL_HOST) !== parse_url($this->parse($zipped['linkText']), PHP_URL_HOST)) {
+			if($this->textLooksLikeALink($zipped['linkText'])) {
+				if(parse_url($this->parse($url), PHP_URL_HOST) !== parse_url($this->parse($zipped['linkText']), PHP_URL_HOST)) {
 					$results[] = [
 						'href' => $url,
 						'linkText' => $zipped['linkText'],
@@ -80,7 +77,7 @@ class LinkCheck {
 				}
 			}
 		}
-		if (count($results) > 0) {
+		if(count($results) > 0) {
 			return new PhishingDetectionResult(PhishingDetectionResult::LINK_CHECK, true, $this->l10n->t('Some addresses in this message are not matching the link text'), $results);
 		}
 		return  new PhishingDetectionResult(PhishingDetectionResult::LINK_CHECK, false);

@@ -52,8 +52,8 @@ class SyncJob extends TimedJob {
 
 		$this->setInterval(
 			max(
-				5 * 60,
-				$config->getSystemValueInt('app.mail.background-sync-interval', 3600)
+				10,
+				$config->getSystemValueInt('app.mail.background-sync-interval', 20)
 			),
 		);
 		$this->setTimeSensitivity(self::TIME_SENSITIVE);
@@ -73,7 +73,7 @@ class SyncJob extends TimedJob {
 			return;
 		}
 
-		if (!$account->getMailAccount()->canAuthenticateImap()) {
+		if(!$account->getMailAccount()->canAuthenticateImap()) {
 			$this->logger->debug('No authentication on IMAP possible, skipping background sync job');
 			return;
 		}

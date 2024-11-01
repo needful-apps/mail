@@ -13,6 +13,7 @@ use DateTimeImmutable;
 use Horde\ManageSieve\Exception as ManageSieveException;
 use InvalidArgumentException;
 use JsonException;
+use OCA\Mail\Db\Alias;
 use OCA\Mail\Db\MailAccount;
 use OCA\Mail\Exception\ClientException;
 use OCA\Mail\Exception\CouldNotConnectException;
@@ -24,18 +25,27 @@ use OCA\Mail\Service\OutOfOffice\OutOfOfficeState;
 use OCP\AppFramework\Utility\ITimeFactory;
 use OCP\IUser;
 use OCP\User\IAvailabilityCoordinator;
+use Psr\Container\ContainerExceptionInterface;
+use Psr\Container\ContainerInterface;
 use Psr\Log\LoggerInterface;
 
 class OutOfOfficeService {
+	private ?IAvailabilityCoordinator $availabilityCoordinator;
 
 	public function __construct(
 		private OutOfOfficeParser $outOfOfficeParser,
 		private SieveService $sieveService,
 		private LoggerInterface $logger,
+		private AliasesService $aliasesService,
 		private ITimeFactory $timeFactory,
-		private AllowedRecipientsService $allowedRecipientsService,
-		private IAvailabilityCoordinator $availabilityCoordinator,
+		ContainerInterface $container,
 	) {
+		// TODO: inject directly if we only support Nextcloud >= 28
+		try {
+			$this->availabilityCoordinator = $container->get(IAvailabilityCoordinator::class);
+		} catch (ContainerExceptionInterface $e) {
+			$this->availabilityCoordinator = null;
+		}
 	}
 
 	/**
@@ -62,7 +72,7 @@ class OutOfOfficeService {
 		$newScript = $this->outOfOfficeParser->buildSieveScript(
 			$state,
 			$oldState->getUntouchedSieveScript(),
-			$this->allowedRecipientsService->get($account),
+			$this->buildAllowedRecipients($account),
 		);
 		try {
 			$this->sieveService->updateActiveScript($account->getUserId(), $account->getId(), $newScript);
@@ -92,6 +102,10 @@ class OutOfOfficeService {
 	 * @throws InvalidArgumentException If the given mail account doesn't follow out-of-office settings
 	 */
 	public function updateFromSystem(MailAccount $mailAccount, IUser $user): ?OutOfOfficeState {
+		if ($this->availabilityCoordinator === null) {
+			throw new ServiceException('System out-of-office data is only available in Nextcloud >= 28');
+		}
+
 		if (!$mailAccount->getOutOfOfficeFollowsSystem()) {
 			throw new InvalidArgumentException('The mail account does not follow system out-of-office settings');
 		}
@@ -140,5 +154,16 @@ class OutOfOfficeService {
 
 		$state->setEnabled(false);
 		$this->update($account, $state);
+	}
+
+	/**
+	 * @return string[]
+	 */
+	private function buildAllowedRecipients(MailAccount $mailAccount): array {
+		$aliases = $this->aliasesService->findAll($mailAccount->getId(), $mailAccount->getUserId());
+		$formattedAliases = array_map(static function (Alias $alias) {
+			return $alias->getAlias();
+		}, $aliases);
+		return array_merge([$mailAccount->getEmail()], $formattedAliases);
 	}
 }

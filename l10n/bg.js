@@ -74,8 +74,9 @@ OC.L10N.register(
     "Autoresponder" : "Автоматичен отговор",
     "Automated reply to incoming messages. If someone sends you several messages, this automated reply will be sent at most once every 4 days." : "Автоматичен отговор на входящите съобщения. Ако някой ви изпрати няколко съобщения, този автоматичен отговор ще бъде изпращан най-много веднъж на всеки 4 дни.",
     "Please connect to a sieve server first." : "Моля да се свържете първо със сървъра на ситото",
-    "Filters" : "Филтри",
+    "Sieve filter rules" : "Правила за филтриране чрез сито",
     "Mail server" : "Имейл сървър",
+    "Sieve filter server" : "Сървър за сито филтър",
     "Update alias" : "Актуализиране на псевдоним",
     "Rename alias" : "Преименуване на псевдоним",
     "Show update alias form" : "Показване на формуляр за актуализиране на псевдоним",
@@ -411,11 +412,6 @@ OC.L10N.register(
     "Train" : "Влак",
     "{trainNr} from {depStation} to {arrStation}" : "{trainNr} от {depStation} до {arrStation}",
     "Train from {depStation} to {arrStation}" : "Влак от {depStation} до {arrStation}",
-    "Flag" : "Знаме",
-    "Operator" : "Оператор",
-    "Actions" : "Действия",
-    "New action" : "Ново действие",
-    "Priority" : "Приоритет",
     "Mail app" : "Приложение за поща",
     "The mail app allows users to read mails on their IMAP accounts." : "Приложението за поща позволява на потребителите да четат имейли в своите IMAP профили.",
     "Here you can find instance-wide settings. User specific settings are found in the app itself (bottom-left corner)." : "Тук можете да намерите настройки за целия екземпляр. Потребителските настройки се намират в самото приложение (долния ляв ъгъл).",
@@ -548,8 +544,6 @@ OC.L10N.register(
     "Redirect" : "Пренасочване",
     "The link leads to %s" : "Връзката води до %s",
     "If you do not want to visit that page, you can return to <a href=\"%s\">Mail</a>." : "Ако не желаете да посетите тази страница, може да се върнете към <a href=\"%s\">Поща</a>.",
-    "Continue to %s" : "Продължи към %s",
-    "Sieve filter rules" : "Правила за филтриране чрез сито",
-    "Sieve filter server" : "Сървър за сито филтър"
+    "Continue to %s" : "Продължи към %s"
 },
 "nplurals=2; plural=(n != 1);");

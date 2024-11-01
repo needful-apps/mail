@@ -72,8 +72,9 @@
     "Autoresponder" : "Contestador automático",
     "Automated reply to incoming messages. If someone sends you several messages, this automated reply will be sent at most once every 4 days." : "Respuesta automática a mensajes entrantes. Si alguien te envía varios mensajes, esta respuesta automática se enviará como máximo una vez cada 4 días.",
     "Please connect to a sieve server first." : "Por favor, conecta primero con un servidor sieve.",
-    "Filters" : "Filtros",
+    "Sieve filter rules" : "Reglas de filtro sieve",
     "Mail server" : "Servidor de correo",
+    "Sieve filter server" : "Servidor de filtro sieve",
     "Update alias" : "Actualizar alias",
     "Rename alias" : "Renombrar alias",
     "Show update alias form" : "Mostrar formulario de actualización de alias",
@@ -427,11 +428,6 @@
     "Train" : "Tren",
     "{trainNr} from {depStation} to {arrStation}" : "{trainNr} desde {depStation} a {arrStation}",
     "Train from {depStation} to {arrStation}" : "Tren desde {depStation} a {arrStation}",
-    "Flag" : "Bandera",
-    "Operator" : "Operador",
-    "Actions" : "Acciones",
-    "New action" : "Nueva acción",
-    "Priority" : "Prioridad",
     "Mail app" : "Aplicación de correo",
     "The mail app allows users to read mails on their IMAP accounts." : "La aplicación de correo permite a los usuarios leer correos en sus cuentas IMAP.",
     "Here you can find instance-wide settings. User specific settings are found in the app itself (bottom-left corner)." : "Aquí puedes encontrar la configuración a nivel de instancia. La configuración específica del usuario se encuentra en la propia aplicación (esquina inferior izquierda).",
@@ -568,8 +564,6 @@
     "Redirect" : "Redireccionar",
     "The link leads to %s" : "La liga lleva a %s",
     "If you do not want to visit that page, you can return to <a href=\"%s\">Mail</a>." : "Si no deseas visitar esa página, puedes regresar a <a href=\"%s\">Correo</a>.",
-    "Continue to %s" : "Continuar a %s",
-    "Sieve filter rules" : "Reglas de filtro sieve",
-    "Sieve filter server" : "Servidor de filtro sieve"
+    "Continue to %s" : "Continuar a %s"
 },"pluralForm" :"nplurals=3; plural=n == 1 ? 0 : n != 0 && n % 1000000 == 0 ? 1 : 2;"
 }

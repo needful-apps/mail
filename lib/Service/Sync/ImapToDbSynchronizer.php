@@ -57,6 +57,9 @@ class ImapToDbSynchronizer {
 	/** @var MailboxMapper */
 	private $mailboxMapper;
 
+	/** @var DatabaseMessageMapper */
+	private $messageMapper;
+
 	/** @var Synchronizer */
 	private $synchronizer;
 
@@ -76,6 +79,7 @@ class ImapToDbSynchronizer {
 		IMAPClientFactory $clientFactory,
 		ImapMessageMapper $imapMapper,
 		MailboxMapper $mailboxMapper,
+		DatabaseMessageMapper $messageMapper,
 		Synchronizer $synchronizer,
 		IEventDispatcher $dispatcher,
 		PerformanceLogger $performanceLogger,
@@ -85,6 +89,7 @@ class ImapToDbSynchronizer {
 		$this->clientFactory = $clientFactory;
 		$this->imapMapper = $imapMapper;
 		$this->mailboxMapper = $mailboxMapper;
+		$this->messageMapper = $messageMapper;
 		$this->synchronizer = $synchronizer;
 		$this->dispatcher = $dispatcher;
 		$this->performanceLogger = $performanceLogger;
@@ -105,9 +110,6 @@ class ImapToDbSynchronizer {
 		$snoozeMailboxId = $account->getMailAccount()->getSnoozeMailboxId();
 		$sentMailboxId = $account->getMailAccount()->getSentMailboxId();
 		$trashRetentionDays = $account->getMailAccount()->getTrashRetentionDays();
-		
-		$client = $this->clientFactory->getClient($account);
-		
 		foreach ($this->mailboxMapper->findAll($account) as $mailbox) {
 			$syncTrash = $trashMailboxId === $mailbox->getId() && $trashRetentionDays !== null;
 			$syncSnooze = $snoozeMailboxId === $mailbox->getId();
@@ -120,7 +122,6 @@ class ImapToDbSynchronizer {
 			$logger->debug('Syncing ' . $mailbox->getId());
 			if ($this->sync(
 				$account,
-				$client,
 				$mailbox,
 				$logger,
 				$criteria,
@@ -131,9 +132,6 @@ class ImapToDbSynchronizer {
 				$rebuildThreads = true;
 			}
 		}
-		
-		$client->logout();
-
 		$this->dispatcher->dispatchTyped(
 			new SynchronizationEvent(
 				$account,
@@ -180,7 +178,7 @@ class ImapToDbSynchronizer {
 	 */
 	private function resetCache(Account $account, Mailbox $mailbox): void {
 		$id = $account->getId() . ':' . $mailbox->getName();
-		$this->dbMapper->deleteAll($mailbox);
+		$this->messageMapper->deleteAll($mailbox);
 		$this->logger->debug("All messages of $id cleared");
 		$mailbox->setSyncNewToken(null);
 		$mailbox->setSyncChangedToken(null);
@@ -195,7 +193,6 @@ class ImapToDbSynchronizer {
 	 * @return bool whether to rebuild threads or not
 	 */
 	public function sync(Account $account,
-		Horde_Imap_Client_Base $client,
 		Mailbox $mailbox,
 		LoggerInterface $logger,
 		int $criteria = Horde_Imap_Client::SYNC_NEWMSGSUIDS | Horde_Imap_Client::SYNC_FLAGSUIDS | Horde_Imap_Client::SYNC_VANISHEDUIDS,
@@ -207,6 +204,7 @@ class ImapToDbSynchronizer {
 			return $rebuildThreads;
 		}
 
+		$client = $this->clientFactory->getClient($account);
 		$client->login(); // Need to login before fetching capabilities.
 
 		// There is no partial sync when using QRESYNC. As per RFC the client will always pull
@@ -281,6 +279,8 @@ class ImapToDbSynchronizer {
 				$logger->debug('Unlocking mailbox ' . $mailbox->getId() . ' from new messages sync');
 				$this->mailboxMapper->unlockFromNewSync($mailbox);
 			}
+
+			$client->logout();
 		}
 
 		if (!$batchSync) {
@@ -304,7 +304,7 @@ class ImapToDbSynchronizer {
 		Horde_Imap_Client_Base $client,
 		Account $account,
 		Mailbox $mailbox,
-		LoggerInterface $logger): void {
+		LoggerInterface  $logger): void {
 		$perf = $this->performanceLogger->startWithLogger(
 			'Initial sync ' . $account->getId() . ':' . $mailbox->getName(),
 			$logger
@@ -344,7 +344,7 @@ class ImapToDbSynchronizer {
 			// We might need more attempts to fill the cache
 			$loggingMailboxId = $account->getId() . ':' . $mailbox->getName();
 			$total = $imapMessages['total'];
-			$cached = count($this->dbMapper->findAllUids($mailbox));
+			$cached = count($this->messageMapper->findAllUids($mailbox));
 			$perf->step('find number of cached UIDs');
 
 			$perf->end();
@@ -507,7 +507,7 @@ class ImapToDbSynchronizer {
 	public function repairSync(
 		Account $account,
 		Mailbox $mailbox,
-		LoggerInterface $logger,
+		LoggerInterface  $logger,
 	): void {
 		$this->mailboxMapper->lockForVanishedSync($mailbox);
 

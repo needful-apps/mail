@@ -13,7 +13,6 @@ use DateTimeImmutable;
 use DateTimeZone;
 use JsonException;
 use OCA\Mail\Exception\OutOfOfficeParserException;
-use OCA\Mail\Sieve\SieveUtils;
 
 /**
  * Parses and builds out-of-office states from/to sieve scripts.
@@ -120,7 +119,7 @@ class OutOfOfficeParser {
 			$condition = "currentdate :value \"ge\" \"iso8601\" \"$formattedStart\"";
 		}
 
-		$escapedSubject = SieveUtils::escapeString($state->getSubject());
+		$escapedSubject = $this->escapeStringForSieve($state->getSubject());
 		$vacation = [
 			'vacation',
 			':days 4',
@@ -135,7 +134,7 @@ class OutOfOfficeParser {
 			$vacation[] = ":addresses [$joinedRecipients]";
 		}
 
-		$escapedMessage = SieveUtils::escapeString($state->getMessage());
+		$escapedMessage = $this->escapeStringForSieve($state->getMessage());
 		$vacation[] = "\"$escapedMessage\"";
 		$vacationCommand = implode(' ', $vacation);
 
@@ -183,5 +182,10 @@ class OutOfOfficeParser {
 
 	private function formatDateForSieve(DateTimeImmutable $date): string {
 		return $date->setTimezone($this->utc)->format('Y-m-d\TH:i:s\Z');
+	}
+
+	private function escapeStringForSieve(string $subject): string {
+		$subject = preg_replace('/\\\\/', '\\\\\\\\', $subject);
+		return preg_replace('/"/', '\\"', $subject);
 	}
 }

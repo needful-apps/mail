@@ -20,10 +20,8 @@ class MessageSentEvent extends Event {
 	/** @var Account */
 	private $account;
 
-	public function __construct(
-		Account $account,
-		private LocalMessage $localMessage,
-	) {
+	public function __construct(Account $account,
+		private LocalMessage $localMessage) {
 		parent::__construct();
 		$this->account = $account;
 	}

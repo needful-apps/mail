@@ -14,10 +14,8 @@ use ReturnTypeWillChange;
 
 class EventData implements JsonSerializable {
 
-	public function __construct(
-		private string $summary,
-		private string $description,
-	) {
+	public function __construct(private string $summary,
+		private string $description) {
 	}
 
 	public function getSummary(): string {

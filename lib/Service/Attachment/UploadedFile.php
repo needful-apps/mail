@@ -24,20 +24,20 @@ class UploadedFile {
 	 * @return string|null
 	 */
 	public function getFileName() {
-		return $this->fileData['name'] ?? null;
+		return isset($this->fileData['name']) ? $this->fileData['name'] : null;
 	}
 
 	/**
 	 * @return string|null
 	 */
 	public function getTempPath() {
-		return $this->fileData['tmp_name'] ?? null;
+		return isset($this->fileData['tmp_name']) ? $this->fileData['tmp_name'] : null;
 	}
 
 	/**
 	 * @return string
 	 */
 	public function getMimeType() {
-		return $this->fileData['type'] ?? 'application/octet-stream';
+		return isset($this->fileData['type']) ? $this->fileData['type'] : 'application/octet-stream';
 	}
 }

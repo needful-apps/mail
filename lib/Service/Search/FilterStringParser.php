@@ -106,11 +106,6 @@ class FilterStringParser {
 			case 'match':
 				$query->setMatch($param);
 				return true;
-			case 'mentions':
-				if ($param === 'true') {
-					$query->setMentionsMe(true);
-				}
-				return true;
 			case 'flags':
 				$flagArray = explode(',', $param);
 				foreach ($flagArray as $flagItem) {

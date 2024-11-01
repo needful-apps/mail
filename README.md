@@ -7,9 +7,9 @@
 
 ![Downloads](https://img.shields.io/github/downloads/nextcloud/mail/total.svg)
 [![REUSE status](https://api.reuse.software/badge/github.com/nextcloud/mail)](https://api.reuse.software/info/github.com/nextcloud/mail)
-![GitHub Workflow Status](https://img.shields.io/github/actions/workflow/status/nextcloud/mail/test.yml)
+![GitHub Workflow Status](https://img.shields.io/github/workflow/status/nextcloud/mail/Test)
 [![Codecov](https://img.shields.io/codecov/c/github/nextcloud/mail)](https://codecov.io/gh/nextcloud/mail)
-[![Renovate](https://img.shields.io/badge/renovate-enabled-brightgreen.svg)](https://github.com/nextcloud/mail/issues/7948)
+[![Dependabot Status](https://api.dependabot.com/badges/status?host=github&repo=nextcloud/mail)](https://dependabot.com)
 
 **💌 A mail app for [Nextcloud](https://nextcloud.com)**
 
@@ -18,13 +18,13 @@
 
 ## Why is this so awesome?
 
-* **🚀 Integration with other Nextcloud apps!** Currently Contacts, Calendar, Files & Tasks – more to come.
+* **🚀 Integration with other Nextcloud apps!** Currently Contacts, Calendar & Files – more to come.
 * **📥 Multiple mail accounts!** Personal and company account? No problem, and a nice unified inbox. Connect any IMAP account.
-* **🔒 Send & receive encrypted mails!** Using the great [Mailvelope](https://mailvelope.com) browser extension or the built-in support for S/MIME encryption and signatures.
+* **🔒 Send & receive encrypted mails!** Using the great [Mailvelope](https://mailvelope.com) browser extension.
 * **📑 Message threads!** Now we have proper grouping of message threads.
 * **🗄️ Mailbox management!** You can edit, delete, add submailboxes and more.
 * **🙈 We’re not reinventing the wheel!** Based on the great [Horde](https://www.horde.org) libraries.
-* **📬 Want to host your own mail server?** We don’t have to reimplement this as you could set up [Mail-in-a-Box](https://mailinabox.email), [Stalwart](https://stalw.art) or [Dovecot](https://www.dovecot.org)!
+* **📬 Want to host your own mail server?** We don’t have to reimplement this as you could set up [Mail-in-a-Box](https://mailinabox.email)!
 
 If you experience any issues or have any suggestions for improvement, use the [issue tracker](https://github.com/nextcloud/mail/issues). Please follow the [issue template chooser](https://github.com/nextcloud/mail/issues/new/choose) so we get the info needed to debug and fix the problem. Thanks!
 

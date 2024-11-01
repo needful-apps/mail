@@ -48,8 +48,6 @@ OC.L10N.register(
     "Date" : "Date",
     "Tags" : "Etiquettas",
     "Custom" : "Personalisate",
-    "Actions" : "Actiones",
-    "Priority" : "Prioritate",
     "Reset" : "Re-fixar",
     "User" : "User",
     "Host" : "Hospite",

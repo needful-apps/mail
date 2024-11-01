@@ -88,16 +88,16 @@ class Classifier extends Entity {
 	protected $createdAt;
 
 	public function __construct() {
-		$this->addType('accountId', 'integer');
+		$this->addType('accountId', 'int');
 		$this->addType('type', 'string');
 		$this->addType('appVersion', 'string');
-		$this->addType('trainingSetSize', 'integer');
-		$this->addType('validationSetSize', 'integer');
+		$this->addType('trainingSetSize', 'int');
+		$this->addType('validationSetSize', 'int');
 		$this->addType('recallImportant', 'float');
 		$this->addType('precisionImportant', 'float');
 		$this->addType('f1ScoreImportant', 'float');
-		$this->addType('duration', 'integer');
+		$this->addType('duration', 'int');
 		$this->addType('active', 'boolean');
-		$this->addType('createdAt', 'integer');
+		$this->addType('createdAt', 'int');
 	}
 }

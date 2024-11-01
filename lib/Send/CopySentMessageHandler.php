@@ -17,8 +17,7 @@ use OCP\AppFramework\Db\DoesNotExistException;
 use Psr\Log\LoggerInterface;
 
 class CopySentMessageHandler extends AHandler {
-	public function __construct(
-		private IMAPClientFactory $imapClientFactory,
+	public function __construct(private IMAPClientFactory $imapClientFactory,
 		private MailboxMapper $mailboxMapper,
 		private LoggerInterface $logger,
 		private MessageMapper $messageMapper,
@@ -29,8 +28,8 @@ class CopySentMessageHandler extends AHandler {
 			return $this->processNext($account, $localMessage);
 		}
 
-		$rawMessage = $localMessage->getRaw();
-		if ($rawMessage === null) {
+		$rawMesage = $localMessage->getRaw();
+		if ($rawMesage === null) {
 			$localMessage->setStatus(LocalMessage::STATUS_IMAP_SENT_MAILBOX_FAIL);
 			return $localMessage;
 		}
@@ -65,7 +64,7 @@ class CopySentMessageHandler extends AHandler {
 			$this->messageMapper->save(
 				$client,
 				$sentMailbox,
-				$rawMessage,
+				$rawMesage,
 			);
 			$localMessage->setStatus(LocalMessage::STATUS_PROCESSED);
 		} catch (Horde_Imap_Client_Exception $e) {

@@ -39,7 +39,6 @@ OC.L10N.register(
     "Close" : "වසන්න",
     "Body" : "අන්තර්ගතය",
     "Date" : "දිනය",
-    "Actions" : "ක්‍රියාමාර්ග",
     "User" : "පරිශීලක",
     "Host" : " ධාරකය",
     "Certificate" : "සහතිකය",

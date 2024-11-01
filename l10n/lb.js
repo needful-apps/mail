@@ -41,7 +41,6 @@ OC.L10N.register(
     "Date" : "Date",
     "Tags" : "Tags",
     "Custom" : "Individualiséier",
-    "Actions" : "Aktiounen",
     "Reset" : "Zeréck setzen",
     "Client ID" : "Client ID",
     "User" : "User",
