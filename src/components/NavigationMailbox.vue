@@ -8,6 +8,7 @@
 		:id="genId(mailbox)"
 		:key="genId(mailbox)"
 		v-droppable-mailbox="{
+			mainStore: mainStore,
 			mailboxId: mailbox.databaseId,
 			accountId: mailbox.accountId,
 			isValidDropTarget,
@@ -130,7 +131,7 @@
 			</ActionButton>
 
 			<ActionCheckbox v-if="notVirtual"
-				:checked="isSubscribed"
+				:checked="mailbox.isSubscribed"
 				:disabled="changeSubscription"
 				@update:checked="changeFolderSubscription">
 				{{ t('mail', 'Subscribed') }}
@@ -185,25 +186,25 @@
 <script>
 
 import { NcAppNavigationItem as AppNavigationItem, NcCounterBubble as CounterBubble, NcActionButton as ActionButton, NcActionCheckbox as ActionCheckbox, NcActionInput as ActionInput, NcActionText as ActionText, NcLoadingIcon as IconLoading } from '@nextcloud/vue'
-import IconEmailCheck from 'vue-material-design-icons/EmailCheck.vue'
+import IconEmailCheck from 'vue-material-design-icons/EmailCheckOutline.vue'
 import IconExternal from 'vue-material-design-icons/OpenInNew.vue'
-import IconFolder from 'vue-material-design-icons/Folder.vue'
-import IconFolderShared from 'vue-material-design-icons/FolderAccount.vue'
-import IconFolderAdd from 'vue-material-design-icons/FolderMultiple.vue'
-import IconFavorite from 'vue-material-design-icons/Star.vue'
-import IconFolderRename from 'vue-material-design-icons/FolderEdit.vue'
-import IconFolderSync from 'vue-material-design-icons/FolderSync.vue'
-import IconDelete from 'vue-material-design-icons/Delete.vue'
-import IconInfo from 'vue-material-design-icons/Information.vue'
-import IconDraft from 'vue-material-design-icons/Pencil.vue'
+import IconFolder from 'vue-material-design-icons/FolderOutline.vue'
+import IconFolderShared from 'vue-material-design-icons/FolderAccountOutline.vue'
+import IconFolderAdd from 'vue-material-design-icons/FolderMultipleOutline.vue'
+import IconFavorite from 'vue-material-design-icons/StarOutline.vue'
+import IconFolderRename from 'vue-material-design-icons/FolderEditOutline.vue'
+import IconFolderSync from 'vue-material-design-icons/FolderSyncOutline.vue'
+import IconDelete from 'vue-material-design-icons/DeleteOutline.vue'
+import IconInfo from 'vue-material-design-icons/InformationOutline.vue'
+import IconDraft from 'vue-material-design-icons/PencilOutline.vue'
 import IconArchive from 'vue-material-design-icons/PackageDown.vue'
-import IconInbox from 'vue-material-design-icons/Home.vue'
+import IconInbox from 'vue-material-design-icons/HomeOutline.vue'
 import IconJunk from 'vue-material-design-icons/Fire.vue'
-import IconAllInboxes from 'vue-material-design-icons/InboxMultiple.vue'
+import IconAllInboxes from 'vue-material-design-icons/InboxMultipleOutline.vue'
 import EraserVariant from 'vue-material-design-icons/EraserVariant.vue'
 import ImportantIcon from './icons/ImportantIcon.vue'
-import IconSend from 'vue-material-design-icons/Send.vue'
-import IconWrench from 'vue-material-design-icons/Wrench.vue'
+import IconSend from 'vue-material-design-icons/SendOutline.vue'
+import IconWrench from 'vue-material-design-icons/WrenchOutline.vue'
 import MoveMailboxModal from './MoveMailboxModal.vue'
 import { PRIORITY_INBOX_ID, UNIFIED_INBOX_ID } from '../store/constants.js'
 import { mailboxHasRights } from '../util/acl.js'
@@ -216,6 +217,8 @@ import { showInfo, showError } from '@nextcloud/dialogs'
 import { DroppableMailboxDirective as droppableMailbox } from '../directives/drag-and-drop/droppable-mailbox/index.js'
 import dragEventBus from '../directives/drag-and-drop/util/dragEventBus.js'
 import AlarmIcon from 'vue-material-design-icons/Alarm.vue'
+import { mapStores } from 'pinia'
+import useMainStore from '../store/mainStore.js'
 
 export default {
 	name: 'NavigationMailbox',
@@ -290,6 +293,7 @@ export default {
 		}
 	},
 	computed: {
+		...mapStores(useMainStore),
 		visible() {
 			return (
 				(this.account.showSubscribedOnly === false
@@ -325,7 +329,7 @@ export default {
 			return this.subMailboxes.length > 0
 		},
 		subMailboxes() {
-			return this.$store.getters.getSubMailboxes(this.mailbox.databaseId)
+			return this.mainStore.getSubMailboxes(this.mailbox.databaseId)
 		},
 		statsText() {
 			if (this.mailboxStats && 'total' in this.mailboxStats && 'unread' in this.mailboxStats) {
@@ -347,9 +351,6 @@ export default {
 				}
 			}
 			return t('mail', 'Loading …')
-		},
-		isSubscribed() {
-			return this.mailbox.attributes && this.mailbox.attributes.includes('\\subscribed')
 		},
 		isDroppableSpecialMailbox() {
 			if (this.filter === 'starred') {
@@ -373,7 +374,7 @@ export default {
 			if (!this.mailbox.isUnified) {
 				return true
 			}
-			return this.mailbox.specialUse.includes('inbox') && this.$store.getters.accounts.length > 2
+			return this.mailbox.specialUse.includes('inbox') && this.mainStore.getAccounts.length > 2
 		},
 		showUnreadCounter() {
 			if (this.filter === 'starred' || this.mailbox.specialRole === 'trash') {
@@ -388,7 +389,7 @@ export default {
 			if (!this.mailbox.myAcls) {
 				return true
 			}
-			const parent = this.$store.getters.getParentMailbox(this.mailbox.databaseId)
+			const parent = this.mainStore.getParentMailbox(this.mailbox.databaseId)
 			if (!parent || !parent.myAcls) {
 				return mailboxHasRights(this.mailbox, 'x')
 			}
@@ -470,7 +471,7 @@ export default {
 			logger.info(`creating mailbox ${withPrefix} as submailbox of ${this.mailbox.databaseId}`)
 			this.menuOpen = false
 			try {
-				await this.$store.dispatch('createMailbox', {
+				await this.mainStore.createMailbox({
 					account: this.account,
 					name: withPrefix,
 				})
@@ -491,11 +492,10 @@ export default {
 		markAsRead() {
 			this.loadingMarkAsRead = true
 
-			this.$store
-				.dispatch('markMailboxRead', {
-					accountId: this.account.id,
-					mailboxId: this.mailbox.databaseId,
-				})
+			this.mainStore.markMailboxRead({
+				accountId: this.account.id,
+				mailboxId: this.mailbox.databaseId,
+			})
 				.then(() => logger.info(`mailbox ${this.mailbox.databaseId} marked as read`))
 				.catch((error) => logger.error(`could not mark mailbox ${this.mailbox.databaseId} as read`, { error }))
 				.then(() => (this.loadingMarkAsRead = false))
@@ -504,7 +504,7 @@ export default {
 			try {
 				this.changeSubscription = true
 
-				await this.$store.dispatch('changeMailboxSubscription', {
+				await this.mainStore.changeMailboxSubscription({
 					mailbox: this.mailbox,
 					subscribed,
 				})
@@ -519,7 +519,7 @@ export default {
 			try {
 				this.changingSyncInBackground = true
 
-				await this.$store.dispatch('patchMailbox', {
+				await this.mainStore.patchMailbox({
 					mailbox: this.mailbox,
 					attributes: {
 						syncInBackground,
@@ -561,8 +561,7 @@ export default {
 				},
 				(result) => {
 					if (result) {
-						return this.$store
-							.dispatch('clearMailbox', { mailbox: this.mailbox })
+						return this.mainStore.clearMailbox({ mailbox: this.mailbox })
 							.then(() => {
 								logger.info(`mailbox ${id} cleared`)
 							})
@@ -585,8 +584,7 @@ export default {
 				},
 				(result) => {
 					if (result) {
-						return this.$store
-							.dispatch('deleteMailbox', { mailbox: this.mailbox })
+						return this.mainStore.deleteMailbox({ mailbox: this.mailbox })
 							.then(() => {
 								logger.info(`mailbox ${id} deleted`)
 								if (parseInt(this.$route.params.mailboxId, 10) === this.mailbox.databaseId) {
@@ -612,7 +610,7 @@ export default {
 				if (this.mailbox.path) {
 					newName = this.mailbox.path + this.mailbox.delimiter + newName
 				}
-				await this.$store.dispatch('renameMailbox', {
+				await this.mainStore.renameMailbox({
 					account: this.account,
 					mailbox: this.mailbox,
 					newName,
@@ -642,7 +640,7 @@ export default {
 			if (accountId !== this.mailbox.accountId) {
 				return
 			}
-			this.$store.commit('expandAccount', accountId)
+			this.mainStore.expandAccountMutation(accountId)
 			this.showSubMailboxes = true
 		},
 		onDragEnd({ accountId }) {

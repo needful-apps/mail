@@ -14,6 +14,7 @@ use OCP\IURLGenerator;
 use OCP\L10N\IFactory;
 use OCP\Notification\INotification;
 use OCP\Notification\INotifier;
+use OCP\Notification\UnknownNotificationException;
 
 class Notifier implements INotifier {
 	private IFactory $factory;
@@ -25,6 +26,7 @@ class Notifier implements INotifier {
 		$this->url = $url;
 	}
 
+	#[\Override]
 	public function getID(): string {
 		return Application::APP_ID;
 	}
@@ -33,15 +35,17 @@ class Notifier implements INotifier {
 	 * Human-readable name describing the notifier
 	 * @return string
 	 */
+	#[\Override]
 	public function getName(): string {
 		return $this->factory->get(Application::APP_ID)->t('Mail');
 	}
 
 
+	#[\Override]
 	public function prepare(INotification $notification, string $languageCode): INotification {
 		if ($notification->getApp() !== Application::APP_ID) {
 			// Not my app => throw
-			throw new \InvalidArgumentException();
+			throw new UnknownNotificationException();
 		}
 
 		// Read the language from the notification
@@ -69,7 +73,7 @@ class Notifier implements INotifier {
 					]);
 				break;
 			default:
-				throw  new \InvalidArgumentException();
+				throw  new UnknownNotificationException();
 		}
 
 		return $notification;

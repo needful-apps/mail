@@ -34,12 +34,12 @@
 			style="display: none;"
 			@change="onLocalAttachmentSelected">
 		<FilePicker v-if="isAttachementPickerOpen"
-			:title="t('mail','Choose a file to add as attachment')"
+			:name="t('mail','Choose a file to add as attachment')"
 			:buttons="attachementPickerButtons"
 			:filter-fn="filterAttachements"
 			@close="()=>isAttachementPickerOpen = false" />
 		<FilePicker v-if="isLinkPickerOpen"
-			:title="t('mail','Choose a file to share as a link')"
+			:name="t('mail','Choose a file to share as a link')"
 			:multiselect="false"
 			:buttons="linkPickerButtons"
 			:filter-fn="filterAttachements"
@@ -194,7 +194,7 @@ export default {
 	methods: {
 		filterAttachements(node) {
 			const downloadShareAttribute = node.attributes['share-attributes'] ? JSON.parse(node.attributes['share-attributes'])?.find((shareAttribute) => shareAttribute.key === 'download') : undefined
-			const downloadPermissions = downloadShareAttribute !== undefined ? downloadShareAttribute.enabled : true
+			const downloadPermissions = downloadShareAttribute !== undefined ? downloadShareAttribute.value : true
 			return (node.permissions & OC.PERMISSION_READ) && downloadPermissions
 		},
 		openAttachementPicker() {

@@ -32,9 +32,9 @@
 </template>
 <script>
 import ArrowDownIcon from 'vue-material-design-icons/ArrowDown.vue'
-import creation from '@mdi/svg/svg/creation.svg'
-import NcButton from '@nextcloud/vue/dist/Components/NcButton.js'
-import NcChip from '@nextcloud/vue/dist/Components/NcChip.js'
+import creation from '@mdi/svg/svg/creation-outline.svg'
+import NcButton from '@nextcloud/vue/components/NcButton'
+import NcChip from '@nextcloud/vue/components/NcChip'
 import LoadingSkeleton from './LoadingSkeleton.vue'
 
 export default {

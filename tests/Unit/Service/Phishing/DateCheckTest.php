@@ -1,4 +1,5 @@
 <?php
+
 /**
  * SPDX-FileCopyrightText: 2024 Nextcloud GmbH and Nextcloud contributors
  * SPDX-License-Identifier: AGPL-3.0-or-later
@@ -40,7 +41,7 @@ class DateCheckTest extends TestCase {
 				new DateTime('now'),
 				new DateTime('26 June 2024 22:45:34 +0000')
 			);
-		
+
 		$result = $this->service->run('26 June 2024 22:45:34 +0000');
 
 		$this->assertFalse($result->isPhishing());
@@ -63,6 +64,22 @@ class DateCheckTest extends TestCase {
 		$result = $this->service->run('17 June 3000 22:45:34 +0000');
 
 		$this->assertTrue($result->isPhishing());
+	}
+
+	public function testInvalidDate(): void {
+
+		$this->time->expects($this->exactly(2))
+			->method('getDateTime')
+			->willReturnCallback(function ($argument): DateTime {
+				return match ($argument) {
+					'now' => new \DateTime('now'),
+					'invalid date' => throw new \DateException()
+				};
+			});
+
+		$result = $this->service->run('invalid date');
+
+		$this->assertFalse($result->isPhishing());
 	}
 
 }

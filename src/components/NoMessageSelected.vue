@@ -5,18 +5,22 @@
 
 <template>
 	<AppContentDetails class="app-content">
-		<NcEmptyContent :name="welcomeMessage" class="app-content__empty">
+		<NcEmptyContent class="app-content__empty"
+			:name="t('mail', 'Welcome to {productName} Mail', { productName }, null, {escape: false})"
+			:description="t('mail', 'Start writing a message by clicking below or select an existing message to display its contents')">
 			<template #icon>
 				<IconMail :size="65" />
 			</template>
+			<template #action>
+				<NewMessageButtonHeader />
+			</template>
 		</NcEmptyContent>
-		<NewMessageButtonHeader />
 	</AppContentDetails>
 </template>
 
 <script>
 import { NcAppContentDetails as AppContentDetails, NcEmptyContent } from '@nextcloud/vue'
-import IconMail from 'vue-material-design-icons/Email.vue'
+import IconMail from 'vue-material-design-icons/EmailOutline.vue'
 import NewMessageButtonHeader from './NewMessageButtonHeader.vue'
 
 export default {
@@ -29,8 +33,8 @@ export default {
 	},
 
 	computed: {
-		welcomeMessage() {
-			return t('mail', 'Welcome to {cloudName} Mail', { cloudName: window?.OC?.theme?.name ?? 'Nextcloud' })
+		productName() {
+			return window?.OC?.theme?.name ?? 'Nextcloud'
 		},
 	},
 }

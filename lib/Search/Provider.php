@@ -12,6 +12,7 @@ namespace OCA\Mail\Search;
 use OCA\Mail\AppInfo\Application;
 use OCA\Mail\Contracts\IMailSearch;
 use OCA\Mail\Db\Message;
+use OCA\Mail\Service\Search\FilterStringParser;
 use OCP\IDateTimeFormatter;
 use OCP\IL10N;
 use OCP\IURLGenerator;
@@ -35,26 +36,32 @@ class Provider implements IProvider {
 	/** @var IURLGenerator */
 	private $urlGenerator;
 
-	public function __construct(IMailSearch $mailSearch,
+	public function __construct(
+		IMailSearch $mailSearch,
 		IL10N $l10n,
 		IDateTimeFormatter $dateTimeFormatter,
-		IURLGenerator $urlGenerator) {
+		IURLGenerator $urlGenerator,
+		private FilterStringParser $filterStringParser,
+	) {
 		$this->mailSearch = $mailSearch;
 		$this->l10n = $l10n;
 		$this->dateTimeFormatter = $dateTimeFormatter;
 		$this->urlGenerator = $urlGenerator;
 	}
 
+	#[\Override]
 	public function getId(): string {
 		return Application::APP_ID;
 	}
 
+	#[\Override]
 	public function getName(): string {
 		return $this->l10n->t('Mails');
 	}
 
+	#[\Override]
 	public function getOrder(string $route, array $routeParameters): int {
-		if (strpos($route, Application::APP_ID . '.') === 0) {
+		if (str_starts_with($route, Application::APP_ID . '.')) {
 			// Active app, prefer Mail results
 			return -1;
 		}
@@ -62,16 +69,22 @@ class Provider implements IProvider {
 		return 20;
 	}
 
+	#[\Override]
 	public function search(IUser $user, ISearchQuery $query): SearchResult {
 		return $this->searchByFilter($user, $query, $query->getTerm());
 	}
 
 	protected function searchByFilter(IUser $user, ISearchQuery $query, string $filter): SearchResult {
+		$mailQuery = $this->filterStringParser->parse($filter);
+
 		$cursor = $query->getCursor();
+		if ($cursor !== null) {
+			$mailQuery->setCursor((int)$cursor);
+		}
+
 		$messages = $this->mailSearch->findMessagesGlobally(
 			$user,
-			$filter,
-			empty($cursor) ? null : ((int)$cursor),
+			$mailQuery,
 			$query->getLimit()
 		);
 

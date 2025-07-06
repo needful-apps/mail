@@ -23,8 +23,7 @@
 					:aria-label-combobox="t('mail', 'Select account')"
 					:clear-on-select="false"
 					:append-to-body="false"
-					:selectable="(option)=> {
-						return option.selectable}"
+					:selectable="(option)=>option.selectable"
 					@option:selected="onAliasChange">
 					<template #option="option">
 						{{ formatAliases(option) }}
@@ -84,10 +83,9 @@
 						<div>
 							<ListItemIcon :no-margin="true"
 								:name="option.label"
-								:subtitle="option.email"
+								:subname="getSubnameForRecipient(option)"
 								:icon-class="!option.id ? 'icon-user' : null"
-								:url="option.photo"
-								:avatar-size="24" />
+								:url="option.photo" />
 						</div>
 					</template>
 				</NcSelect>
@@ -138,10 +136,9 @@
 						<div>
 							<ListItemIcon :no-margin="true"
 								:name="option.label"
-								:subtitle="option.email"
+								:subname="getSubnameForRecipient(option)"
 								:url="option.photo"
-								:icon-class="!option.id ? 'icon-user' : null"
-								:avatar-size="24" />
+								:icon-class="!option.id ? 'icon-user' : null" />
 						</div>
 					</template>
 				</NcSelect>
@@ -192,10 +189,9 @@
 						<div>
 							<ListItemIcon :no-margin="true"
 								:name="option.label"
-								:subtitle="option.email"
+								:subname="getSubnameForRecipient(option)"
 								:url="option.photo"
-								:icon-class="!option.id ? 'icon-user' : null"
-								:avatar-size="24" />
+								:icon-class="!option.id ? 'icon-user' : null" />
 						</div>
 					</template>
 				</NcSelect>
@@ -362,8 +358,8 @@
 						</ActionCheckbox>
 						<ActionCheckbox v-if="smimeCertificateForCurrentAlias"
 							:checked="wantsSmimeSign"
-							@check="wantsSmimeSign = true"
-							@uncheck="wantsSmimeSign = false">
+							@check="smimeSignCheck(true)"
+							@uncheck="smimeSignCheck(false)">
 							{{ t('mail', 'Sign message with S/MIME') }}
 						</ActionCheckbox>
 						<ActionCheckbox v-if="smimeCertificateForCurrentAlias"
@@ -442,7 +438,7 @@
 					</template>
 				</Actions>
 
-				<ButtonVue :disabled="!canSend"
+				<ButtonVue :disabled="!canSend || sending"
 					native-type="submit"
 					type="primary"
 					:aria-label="submitButtonTitle"
@@ -467,13 +463,13 @@ import debouncePromise from 'debounce-promise'
 
 import { NcActions as Actions, NcActionButton as ActionButton, NcActionCheckbox as ActionCheckbox, NcActionInput as ActionInput, NcActionRadio as ActionRadio, NcButton as ButtonVue, NcSelect, NcListItemIcon as ListItemIcon } from '@nextcloud/vue'
 import ChevronLeft from 'vue-material-design-icons/ChevronLeft.vue'
-import Delete from 'vue-material-design-icons/Delete.vue'
+import Delete from 'vue-material-design-icons/DeleteOutline.vue'
 import ComposerAttachments from './ComposerAttachments.vue'
-import Download from 'vue-material-design-icons/Download.vue'
-import IconUpload from 'vue-material-design-icons/Upload.vue'
-import IconFolder from 'vue-material-design-icons/Folder.vue'
+import Download from 'vue-material-design-icons/DownloadOutline.vue'
+import IconUpload from 'vue-material-design-icons/UploadOutline.vue'
+import IconFolder from 'vue-material-design-icons/FolderOutline.vue'
 import IconPublic from 'vue-material-design-icons/Link.vue'
-import IconLinkPicker from 'vue-material-design-icons/Shape.vue'
+import IconLinkPicker from 'vue-material-design-icons/ShapeOutline.vue'
 import RecipientListItem from './RecipientListItem.vue'
 import Paperclip from 'vue-material-design-icons/Paperclip.vue'
 import IconFormat from 'vue-material-design-icons/FormatSize.vue'
@@ -483,7 +479,7 @@ import Vue from 'vue'
 import mitt from 'mitt'
 
 import { findRecipient } from '../service/AutocompleteService.js'
-import { detect, html, plain, toHtml, toPlain } from '../util/text.js'
+import { detect, html, toHtml, toPlain } from '../util/text.js'
 import logger from '../logger.js'
 import TextEditor from './TextEditor.vue'
 import { buildReplyBody } from '../ReplyBuilder.js'
@@ -491,14 +487,16 @@ import MailvelopeEditor from './MailvelopeEditor.vue'
 import { getMailvelope } from '../crypto/mailvelope.js'
 import { isPgpgMessage } from '../crypto/pgp.js'
 
-import { NcReferencePickerModal } from '@nextcloud/vue/dist/Components/NcRichText.js'
+import { NcReferencePickerModal } from '@nextcloud/vue/components/NcRichText'
 
-import Send from 'vue-material-design-icons/Send.vue'
-import SendClock from 'vue-material-design-icons/SendClock.vue'
+import Send from 'vue-material-design-icons/SendOutline.vue'
+import SendClock from 'vue-material-design-icons/SendClockOutline.vue'
 import moment from '@nextcloud/moment'
-import { mapGetters } from 'vuex'
 import { TRIGGER_CHANGE_ALIAS, TRIGGER_EDITOR_READY } from '../ckeditor/signature/InsertSignatureCommand.js'
 import { EDITOR_MODE_HTML, EDITOR_MODE_TEXT } from '../store/constants.js'
+import useMainStore from '../store/mainStore.js'
+import { mapStores, mapState } from 'pinia'
+import { savePreference } from '../service/PreferenceService.js'
 
 const debouncedSearch = debouncePromise(findRecipient, 500)
 
@@ -646,6 +644,7 @@ export default {
 		selectedDate.setHours(selectedDate.getHours() + 1)
 
 		return {
+			sending: false,
 			showCC: this.cc.length > 0,
 			showBCC: this.bcc.length > 0,
 			selectedAlias: NO_ALIAS_SET, // Fixed in `beforeMount`
@@ -691,14 +690,14 @@ export default {
 			wantsSmimeEncrypt: this.smimeEncrypt,
 			isPickerOpen: false,
 			recipientSearchTerms: {},
+			smimeSignAliases: [],
 		}
 	},
 	computed: {
-		...mapGetters([
-			'isScheduledSendingDisabled',
-		]),
+		...mapStores(useMainStore),
+		...mapState(useMainStore, ['isScheduledSendingDisabled']),
 		isPickerAvailable() {
-			return parseInt(this.$store.getters.getNcVersion) >= 26
+			return parseInt(this.mainStore.getNcVersion) >= 26
 		},
 		aliases() {
 			let cnt = 0
@@ -740,7 +739,7 @@ export default {
 			return new Date(new Date().setDate(new Date().getDate()))
 		},
 		attachmentSizeLimit() {
-			return this.$store.getters.getPreference('attachment-size-limit')
+			return this.mainStore.getPreference('attachment-size-limit')
 		},
 		selectableRecipients() {
 			return uniqBy('email')(this.newRecipients
@@ -881,7 +880,7 @@ export default {
 			const missingCertificates = []
 
 			this.allRecipients.forEach((recipient) => {
-				const recipientCertificate = this.$store.getters.getSmimeCertificateByEmail(recipient.email)
+				const recipientCertificate = this.mainStore.getSmimeCertificateByEmail(recipient.email)
 				if (!recipientCertificate) {
 					missingCertificates.push(recipient.email)
 				}
@@ -942,6 +941,13 @@ export default {
 		requestMdnVal(val) {
 			this.$emit('update:request-mdn', val)
 		},
+		selectedAlias: {
+			handler() {
+				const aliasEmailAddress = this.selectedAlias.emailAddress
+				this.wantsSmimeSign = this.smimeSignAliases.indexOf(aliasEmailAddress) !== -1
+			},
+			immediate: true,
+		},
 	},
 	async beforeMount() {
 		this.setAlias()
@@ -968,7 +974,7 @@ export default {
 
 		// Add messages forwarded as attachments
 		for (const id of this.forwardedMessages) {
-			const env = this.$store.getters.getEnvelope(id)
+			const env = this.mainStore.getEnvelope(id)
 			if (!env) {
 				// TODO: also happens when the composer page is reloaded
 				showError(t('mail', 'Message {id} could not be found', {
@@ -987,6 +993,8 @@ export default {
 		if (this.sendAt && this.isSendAtCustom) {
 			this.selectedDate = new Date(this.sendAt)
 		}
+
+		this.smimeSignAliases = this.mainStore.getPreference('smime-sign-aliases', [])
 	},
 	beforeDestroy() {
 		window.removeEventListener('mailvelope', this.onMailvelopeLoaded)
@@ -1032,7 +1040,7 @@ export default {
 					return alias.id === this.fromAccount && !alias.aliasId
 				})
 			} else {
-				const currentAccountId = this.$store.getters.getMailbox(this.$route.params.mailboxId)?.accountId
+				const currentAccountId = this.mainStore.getMailbox(this.$route.params.mailboxId)?.accountId
 				if (currentAccountId) {
 					this.selectedAlias = this.aliases.find((alias) => {
 						return alias.id === currentAccountId
@@ -1064,14 +1072,14 @@ export default {
 					this.editorPlainText ? toPlain(this.body) : toHtml(this.body),
 					this.replyTo.from[0],
 					this.replyTo.dateInt,
-					this.$store.getters.getPreference('reply-mode', 'top') === 'top',
+					this.mainStore.getPreference('reply-mode', 'top') === 'top',
 				).value
 			} else if (this.forwardFrom && this.isFirstOpen) {
 				body = buildReplyBody(
 					this.editorPlainText ? toPlain(this.body) : toHtml(this.body),
 					this.forwardFrom.from[0],
 					this.forwardFrom.dateInt,
-					this.$store.getters.getPreference('reply-mode', 'top') === 'top',
+					this.mainStore.getPreference('reply-mode', 'top') === 'top',
 				).value
 			} else {
 				body = this.bodyVal
@@ -1079,7 +1087,7 @@ export default {
 			this.bodyVal = html(body).value
 		},
 		getMessageData() {
-			return {
+			const data = {
 				// TODO: Rename account to accountId
 				account: this.selectedAlias.id,
 				accountId: this.selectedAlias.id,
@@ -1088,7 +1096,6 @@ export default {
 				cc: this.selectCc,
 				bcc: this.selectBcc,
 				subject: this.subjectVal,
-				body: this.encrypt ? plain(this.bodyVal) : html(this.bodyVal),
 				attachments: this.attachments,
 				inReplyToMessageId: this.inReplyToMessageId ?? (this.replyTo ? this.replyTo.messageId : undefined),
 				isHtml: !this.encrypt && !this.editorPlainText,
@@ -1099,6 +1106,14 @@ export default {
 				smimeCertificateId: this.smimeCertificateForCurrentAlias?.id,
 				isPgpMime: this.encrypt,
 			}
+
+			if (data.isHtml) {
+				data.bodyHtml = this.bodyVal
+			} else {
+				data.bodyPlain = toPlain(html(this.bodyVal)).value
+			}
+
+			return data
 		},
 		saveDraft() {
 			const draftData = this.getMessageData()
@@ -1212,6 +1227,20 @@ export default {
 			this.loadingIndicatorCc = addressType === 'cc'
 			this.loadingIndicatorBcc = addressType === 'bcc'
 			this.recipientSearchTerms[addressType] = term
+
+			// Autocomplete from own identifies (useful for testing)
+			const accounts = this.accounts.filter((a) => !a.isUnified)
+			const selfRecipients = accounts
+				.filter(
+					account => account.emailAddress.toLowerCase().indexOf(term.toLowerCase()) !== -1
+					|| account.name.toLowerCase().indexOf(term.toLowerCase()) !== -1,
+				)
+				.map(account => ({
+					email: account.emailAddress,
+					label: account.name,
+				}))
+			this.autocompleteRecipients = uniqBy('email')(this.autocompleteRecipients.concat(selfRecipients))
+
 			debouncedSearch(term).then((results) => {
 				if (addressType === 'to') {
 					this.loadingIndicatorTo = false
@@ -1411,7 +1440,18 @@ export default {
 			if (!certificateId) {
 				return undefined
 			}
-			return this.$store.getters.getSmimeCertificate(certificateId)
+			return this.mainStore.getSmimeCertificate(certificateId)
+		},
+
+		smimeSignCheck(value) {
+			this.wantsSmimeSign = value
+			if (value) {
+				this.smimeSignAliases.push(this.selectedAlias.emailAddress)
+			} else {
+				this.smimeSignAliases = this.smimeSignAliases
+					.filter((alias) => alias !== this.selectedAlias.emailAddress)
+			}
+			savePreference('smime-sign-aliases', JSON.stringify(this.smimeSignAliases))
 		},
 
 		/**
@@ -1422,6 +1462,27 @@ export default {
 		 */
 		createRecipientOption(value) {
 			return { email: value, label: value }
+		},
+
+		/**
+		 * Return the subname for recipient suggestion.
+		 *
+		 * Empty if label and email are the same or
+		 * if the suggestion is a group.
+		 *
+		 * @param {{email: string, label: string}} option object
+		 * @return {string}
+		 */
+		getSubnameForRecipient(option) {
+			if (option.source && option.source === 'groups') {
+				return ''
+			}
+
+			if (option.label === option.email) {
+				return ''
+			}
+
+			return option.email
 		},
 	},
 }
@@ -1457,7 +1518,7 @@ export default {
 
 	&.mail-account {
 		border-top: none;
-		padding-top: 10px;
+		padding-top: calc(var(--default-grid-baseline) * 2);
 	}
 
 	input,
@@ -1472,7 +1533,7 @@ export default {
 		display: flex;
 		align-items: flex-start;
 		justify-content: space-between;
-		padding-top: 2px;
+		padding-top: calc(var(--default-grid-baseline) * 0.5);
 
 		button {
 			margin-top: 0;
@@ -1480,7 +1541,7 @@ export default {
 			background-color: transparent;
 			border: none;
 			opacity: 0.5;
-			padding: 10px 16px;
+			padding: calc(var(--default-grid-baseline) * 2) calc(var(--default-grid-baseline) * 4);
 		}
 
 		.select {
@@ -1497,7 +1558,7 @@ export default {
 	.subject {
 		font-size: 15px;
 		font-weight: bold;
-		margin: 3px 0 !important;
+		margin: var(--default-grid-baseline) 0 !important;
 		padding: 0 !important;
 		width: 100%;
 
@@ -1529,7 +1590,7 @@ export default {
 }
 
 .draft-status {
-	padding: 2px;
+	padding: calc(var(--default-grid-baseline) * 0.5);
 	opacity: 0.5;
 	font-size: small;
 	display: block;
@@ -1579,6 +1640,10 @@ export default {
 	display: none;
 }
 
+:deep(.v-select.select){
+	left: 0 !important;
+}
+
 :deep(.vs__dropdown-menu){
 	padding: 0 !important;
 }
@@ -1596,11 +1661,11 @@ export default {
 .send-button {
 	display: flex;
 	align-items: center;
-	padding: 10px 15px;
-	margin-left: 5px;
+	padding: calc(var(--default-grid-baseline) * 2) calc(var(--default-grid-baseline) * 4);
+	margin-left: var(--default-grid-baseline);
 }
 .send-button .send-icon {
-	padding-right: 5px;
+	padding-right: var(--default-grid-baseline);
 }
 .centered-content {
 	margin-top: 0 !important;
@@ -1610,12 +1675,12 @@ export default {
 	align-items: center;
 	flex-direction: row;
 	justify-content: space-between;
-	bottom: 5px;
+	bottom: var(--default-grid-baseline);
 }
 .composer-actions--primary-actions {
 	display: flex;
 	flex-direction: row;
-	padding-left: 10px;
+	padding-left: calc(var(--default-grid-baseline) * 2);
 	align-items: center;
 }
 .composer-actions--secondary-actions {

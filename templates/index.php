@@ -1,10 +1,12 @@
 <?php
+
 /**
  * SPDX-FileCopyrightText: 2016-2024 Nextcloud GmbH and Nextcloud contributors
  * SPDX-FileCopyrightText: 2013-2016 ownCloud, Inc.
  * SPDX-License-Identifier: AGPL-3.0-only
  */
 script('mail', 'mail');
+<<<<<<< HEAD
 ?>
 
 <input type="hidden" id="attachment-size-limit" value="<?php p($_['attachment-size-limit']); ?>">
@@ -17,3 +19,5 @@ script('mail', 'mail');
 <input type="hidden" id="layout-mode" value="<?php p($_['layout-mode']); ?>">
 <input type="hidden" id="follow-up-reminders" value="<?php p($_['follow-up-reminders']); ?>">
 
+=======
+>>>>>>> 5d13aacd343883b2c7ace01db7280a0664c0a6e4

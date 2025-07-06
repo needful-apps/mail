@@ -52,7 +52,7 @@
 			</div>
 			<NcButton type="primary"
 				class="reply-buttons__notsuggested"
-				@click="onReply">
+				@click="onReply('')">
 				<template #icon>
 					<ReplyIcon />
 				</template>
@@ -77,9 +77,16 @@ import MessageEncryptedBody from './MessageEncryptedBody.vue'
 import MessageHTMLBody from './MessageHTMLBody.vue'
 import MessagePlainTextBody from './MessagePlainTextBody.vue'
 import Imip from './Imip.vue'
+<<<<<<< HEAD
 import SupabaseActions from './SupabaseActions.vue'
 import LockOffIcon from 'vue-material-design-icons/LockOff.vue'
 import ReplyIcon from 'vue-material-design-icons/Reply.vue'
+=======
+import LockOffIcon from 'vue-material-design-icons/LockOffOutline.vue'
+import ReplyIcon from 'vue-material-design-icons/ReplyOutline.vue'
+import { mapStores } from 'pinia'
+import useMainStore from '../store/mainStore.js'
+>>>>>>> 5d13aacd343883b2c7ace01db7280a0664c0a6e4
 
 export default {
 	name: 'Message',
@@ -121,6 +128,7 @@ export default {
 		},
 	},
 	computed: {
+		...mapStores(useMainStore),
 		from() {
 			return this.message.from.length === 0 ? '?' : this.message.from[0].label || this.message.from[0].email
 		},
@@ -139,11 +147,11 @@ export default {
 			return this.message.itineraries ?? []
 		},
 		hasCurrentUserPrincipalAndCollections() {
-			return this.$store.getters.hasCurrentUserPrincipalAndCollections
+			return this.mainStore.hasCurrentUserPrincipalAndCollections
 		},
 	},
 	methods: {
-		onReply(replyBody = '') {
+		onReply(replyBody) {
 			this.$emit('reply', replyBody)
 		},
 	},
@@ -178,7 +186,7 @@ export default {
 	}
 }
 .reply-buttons {
-	margin: 0 10px 0 50px;
+	margin: 0 30px 0 50px;
 	display: flex;
 	flex-wrap: wrap;
 	gap: 5px;
@@ -190,9 +198,11 @@ export default {
 		display: flex;
 		flex-wrap: wrap;
 		gap: 5px;
+
 		&__button {
 			margin-right: 5px;
 			border-radius: 12px;
+
 			:deep(.button-vue__text) {
 				font-weight: normal;
 			}

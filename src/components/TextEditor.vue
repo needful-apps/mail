@@ -4,7 +4,11 @@
 -->
 
 <template>
-	<div>
+	<div class="editor-wrapper">
+		<div ref="toolbarContainer" class="toolbar" />
+
+		<div ref="editableContainer" class="editable" />
+
 		<ckeditor v-if="ready"
 			:value="value"
 			:config="config"
@@ -13,7 +17,6 @@
 			class="editor"
 			@input="onEditorInput"
 			@ready="onEditorReady" />
-		<div ref="container" class="toolbar" />
 	</div>
 </template>
 
@@ -21,7 +24,7 @@
 import CKEditor from '@ckeditor/ckeditor5-vue2'
 import AlignmentPlugin from '@ckeditor/ckeditor5-alignment/src/alignment.js'
 import { Mention } from '@ckeditor/ckeditor5-mention'
-import Editor from '@ckeditor/ckeditor5-editor-decoupled/src/decouplededitor.js'
+import Editor from '@ckeditor/ckeditor5-editor-classic/src/classiceditor.js'
 import EssentialsPlugin from '@ckeditor/ckeditor5-essentials/src/essentials.js'
 import BlockQuotePlugin from '@ckeditor/ckeditor5-block-quote/src/blockquote.js'
 import BoldPlugin from '@ckeditor/ckeditor5-basic-styles/src/bold.js'
@@ -30,7 +33,8 @@ import ParagraphPlugin from '@ckeditor/ckeditor5-paragraph/src/paragraph.js'
 import HeadingPlugin from '@ckeditor/ckeditor5-heading/src/heading.js'
 import ItalicPlugin from '@ckeditor/ckeditor5-basic-styles/src/italic.js'
 import LinkPlugin from '@ckeditor/ckeditor5-link/src/link.js'
-import ListStyle from '@ckeditor/ckeditor5-list/src/liststyle.js'
+import ListPlugin from '@ckeditor/ckeditor5-list/src/list.js'
+import ListProperties from '@ckeditor/ckeditor5-list/src/listproperties.js'
 import RemoveFormat from '@ckeditor/ckeditor5-remove-format/src/removeformat.js'
 import SignaturePlugin from '../ckeditor/signature/SignaturePlugin.js'
 import StrikethroughPlugin from '@ckeditor/ckeditor5-basic-styles/src/strikethrough.js'
@@ -39,9 +43,10 @@ import Base64UploadAdapter from '@ckeditor/ckeditor5-upload/src/adapters/base64u
 import ImagePlugin from '@ckeditor/ckeditor5-image/src/image.js'
 import ImageResizePlugin from '@ckeditor/ckeditor5-image/src/imageresize.js'
 import ImageUploadPlugin from '@ckeditor/ckeditor5-image/src/imageupload.js'
+import SourceEditingPlugin from '@ckeditor/ckeditor5-source-editing/src/sourceediting.js'
 import { DropdownView } from '@ckeditor/ckeditor5-ui'
 import MailPlugin from '../ckeditor/mail/MailPlugin.js'
-import { searchProvider, getLinkWithPicker } from '@nextcloud/vue/dist/Components/NcRichText.js'
+import { searchProvider, getLinkWithPicker } from '@nextcloud/vue/components/NcRichText'
 import { getLanguage } from '@nextcloud/l10n'
 import logger from '../logger.js'
 import PickerPlugin from '../ckeditor/smartpicker/PickerPlugin.js'
@@ -89,7 +94,7 @@ export default {
 			Mention,
 			LinkPlugin,
 		]
-		const toolbar = ['undo', 'redo']
+		const toolbar = ['sourceEditing', 'undo', 'redo']
 
 		if (this.html) {
 			plugins.push(...[
@@ -98,7 +103,8 @@ export default {
 				BoldPlugin,
 				ItalicPlugin,
 				BlockQuotePlugin,
-				ListStyle,
+				ListPlugin,
+				ListProperties,
 				FontPlugin,
 				RemoveFormat,
 				StrikethroughPlugin,
@@ -107,6 +113,7 @@ export default {
 				Base64UploadAdapter,
 				ImageResizePlugin,
 				MailPlugin,
+				SourceEditingPlugin,
 			])
 			toolbar.unshift(...[
 				'heading',
@@ -134,6 +141,7 @@ export default {
 			ready: false,
 			editor: Editor,
 			config: {
+				licenseKey: 'GPL',
 				placeholder: this.placeholder,
 				plugins,
 				toolbar: {
@@ -185,7 +193,7 @@ export default {
 			if (text.length === 0) {
 				return []
 			}
-			let contactResults = await autoCompleteByName(text, true)
+			let contactResults = await autoCompleteByName(text)
 			contactResults = contactResults.filter(result => result.email.length > 0)
 			return contactResults
 		},
@@ -316,12 +324,13 @@ export default {
 			logger.debug('TextEditor is ready', { editor })
 
 			// https://ckeditor.com/docs/ckeditor5/latest/examples/builds-custom/bottom-toolbar-editor.html
+			this.$refs.toolbarContainer.appendChild(editor.ui.view.toolbar.element)
+			this.$refs.editableContainer.appendChild(editor.ui.view.editable.element)
+
 			if (editor.ui) {
-				this.$refs.container.appendChild(editor.ui.view.toolbar.element)
 				this.overrideDropdownPositionsToNorth(editor, editor.ui.view.toolbar)
 				this.overrideTooltipPositions(editor.ui.view.toolbar)
 			}
-
 			editor.commands.get('mention')?.on('execute', (event, data) => {
 				event.stop()
 				const eventData = data[0]
@@ -345,6 +354,7 @@ export default {
 					this.$emit('mention', { email: item.email[0], label: item.label })
 				}
 			}, { priority: 'high' })
+
 			this.editorInstance = editor
 
 			if (this.focus) {
@@ -355,6 +365,7 @@ export default {
 			if (this.html) {
 				this.$emit('show-toolbar', editor.ui._focusableToolbarDefinitions[0].toolbarView.element)
 			}
+
 			this.bus.on('append-to-body-at-cursor', this.appendToBodyAtCursor)
 			this.$emit('ready', editor)
 		},
@@ -427,12 +438,9 @@ https://github.com/ckeditor/ckeditor5/issues/1142
 .custom-item-username {
 	color: var(--color-main-text) !important;
  }
- .link-title{
+ .link-title {
 	color: var(--color-main-text) !important;
 	margin-left: var(--default-grid-baseline) !important;
- }
- .link-icon {
-	width: 16px !important;
  }
  .custom-item {
 	width : 100% !important;
@@ -450,6 +458,10 @@ https://github.com/ckeditor/ckeditor5/issues/1142
 	display : block;
 	width : 100% !important;
 	background:var(--color-main-background)!important;
+	img.link-icon {
+		width: 16px;
+		height: 16px;
+	}
  }
  .link-container:hover {
 	background:var(--color-primary-element-light)!important;
@@ -458,15 +470,73 @@ https://github.com/ckeditor/ckeditor5/issues/1142
 	--ck-z-default: 10000;
 	--ck-balloon-border-width:  0;
 }
-.ck.ck-toolbar.ck-rounded-corners {
+.ck.ck-toolbar {
 	border-radius: var(--border-radius-large) !important;
 }
 .ck-rounded-corners .ck.ck-dropdown__panel, .ck.ck-dropdown__panel.ck-rounded-corners {
 	border-radius: var(--border-radius-large) !important;
-	overflow: hidden;
+	overflow: visible;
+}
+.ck.ck-list-styles-list {
+/* our composer is very small, having menus vertically shown is better */
+	grid-template-rows: repeat(3,auto) !important;
+	grid-template-columns: unset !important;
 }
 
 .ck.ck-button {
 	border-radius: var(--border-radius-element) !important;
 }
+.ck-powered-by-balloon {
+	display: none !important;
+}
+.editor-wrapper {
+	display: flex;
+	flex-direction: column-reverse;
+	height: 100%;
+
+	.toolbar {
+		position: sticky;
+		bottom: 0;
+		z-index: 10;
+	}
+
+	.editable {
+		flex-grow: 1;
+		overflow-y: auto;
+	}
+}
+.ck.ck-editor__editable.ck-focused:not(.ck-editor__nested-editable) {
+	width: 99%;
+	height: 97%;
+}
+.ck.ck-button, a.ck.ck-button {
+	font-size: small;
+	font-weight: normal;
+}
+.ck.ck-dropdown.ck-list-styles-dropdown {
+	width: 55px;
+}
+.ck-source-editing-area {
+	height: 97%;
+	overflow: scroll;
+}
+.ck-source-editing-area textarea {
+	border: 0;
+}
+.ck.ck-editor__editable_inline {
+	width: 99%;
+	height: 97%;
+	border: 0;
+}
+.select, button:not(.button-vue,[class^=vs__]), .button, input[type=button], input[type=submit], input[type=reset] {
+	color: var(--color-primary-element-light);
+}
+.ck.ck-editor__top .ck-sticky-panel .ck-sticky-panel__content {
+	border: none;
+}
+.ck.ck-editor__editable.ck-focused:not(.ck-editor__nested-editable) {
+	border: none;
+	box-shadow: none;
+}
+
 </style>

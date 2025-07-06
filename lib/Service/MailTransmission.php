@@ -70,20 +70,30 @@ class MailTransmission implements IMailTransmission {
 	) {
 	}
 
+	#[\Override]
 	public function sendMessage(Account $account, LocalMessage $localMessage): void {
 		$to = $this->transmissionService->getAddressList($localMessage, Recipient::TYPE_TO);
 		$cc = $this->transmissionService->getAddressList($localMessage, Recipient::TYPE_CC);
 		$bcc = $this->transmissionService->getAddressList($localMessage, Recipient::TYPE_BCC);
 		$attachments = $this->transmissionService->getAttachments($localMessage);
 
-		$alias = null;
+		$name = $account->getName();
+		$emailAddress = $account->getEMailAddress();
+
 		if ($localMessage->getAliasId() !== null) {
-			$alias = $this->aliasesService->find($localMessage->getAliasId(), $account->getUserId());
+			try {
+				$alias = $this->aliasesService->find($localMessage->getAliasId(), $account->getUserId());
+				$name = ($alias->getName() ?? $name);
+				$emailAddress = $alias->getAlias();
+			} catch (DoesNotExistException) {
+				$this->logger->debug('The assigned alias no longer exists. Falling back to the default name and email address. It is likely that the alias was deleted or deprovisioned in the meantime.', [
+					'aliasId' => $localMessage->getAliasId(),
+					'accountId' => $account->getId(),
+				]);
+			}
 		}
-		$fromEmail = $alias ? $alias->getAlias() : $account->getEMailAddress();
-		$from = new AddressList([
-			Address::fromRaw($account->getName(), $fromEmail),
-		]);
+
+		$from = Address::fromRaw($name, $emailAddress);
 
 		$attachmentParts = [];
 		foreach ($attachments as $attachment) {
@@ -96,7 +106,7 @@ class MailTransmission implements IMailTransmission {
 		$transport = $this->smtpClientFactory->create($account);
 		// build mime body
 		$headers = [
-			'From' => $from->first()->toHorde(),
+			'From' => $from->toHorde(),
 			'To' => $to->toHorde(),
 			'Cc' => $cc->toHorde(),
 			'Bcc' => $bcc->toHorde(),
@@ -112,7 +122,7 @@ class MailTransmission implements IMailTransmission {
 		}
 
 		if ($localMessage->getRequestMdn()) {
-			$headers[Horde_Mime_Mdn::MDN_HEADER] = $from->first()->toHorde();
+			$headers[Horde_Mime_Mdn::MDN_HEADER] = $from->toHorde();
 		}
 
 		$mail = new Horde_Mime_Mail();
@@ -122,9 +132,16 @@ class MailTransmission implements IMailTransmission {
 			new DataUriParser()
 		);
 		$mimePart = $mimeMessage->build(
+<<<<<<< HEAD
 			$localMessage->isHtml(),
 			$localMessage->getBody(),
 			$attachmentParts
+=======
+			$localMessage->getBodyPlain(),
+			$localMessage->getBodyHtml(),
+			$attachmentParts,
+			$localMessage->isPgpMime() === true
+>>>>>>> 5d13aacd343883b2c7ace01db7280a0664c0a6e4
 		);
 
 		// TODO: add smimeEncrypt check if implemented
@@ -142,6 +159,7 @@ class MailTransmission implements IMailTransmission {
 		try {
 			$mail->send($transport, false, false);
 			$localMessage->setRaw($mail->getRaw(false));
+			$localMessage->setStatus(LocalMessage::STATUS_RAW);
 		} catch (Horde_Mime_Exception $e) {
 			$this->logger->error($e->getMessage(), ['exception' => $e]);
 			if (in_array($e->getCode(), self::RETRIABLE_CODES, true)) {
@@ -165,6 +183,7 @@ class MailTransmission implements IMailTransmission {
 		);
 	}
 
+	#[\Override]
 	public function saveLocalDraft(Account $account, LocalMessage $message): void {
 		$to = $this->transmissionService->getAddressList($message, Recipient::TYPE_TO);
 		$cc = $this->transmissionService->getAddressList($message, Recipient::TYPE_CC);
@@ -182,7 +201,11 @@ class MailTransmission implements IMailTransmission {
 		$imapMessage->setFrom($from);
 		$imapMessage->setCC($cc);
 		$imapMessage->setBcc($bcc);
-		$imapMessage->setContent($message->getBody());
+		if ($message->isHtml() === true) {
+			$imapMessage->setContent($message->getBodyHtml());
+		} else {
+			$imapMessage->setContent($message->getBodyPlain());
+		}
 
 		foreach ($attachments as $attachment) {
 			$this->transmissionService->handleAttachment($account, $attachment);
@@ -250,6 +273,7 @@ class MailTransmission implements IMailTransmission {
 	 * @throws ClientException
 	 * @throws ServiceException
 	 */
+	#[\Override]
 	public function saveDraft(NewMessageData $message, ?Message $previousDraft = null): array {
 		$perfLogger = $this->performanceLogger->start('save draft');
 		$this->eventDispatcher->dispatch(
@@ -327,6 +351,7 @@ class MailTransmission implements IMailTransmission {
 		return [$account, $draftsMailbox, $newUid];
 	}
 
+	#[\Override]
 	public function sendMdn(Account $account, Mailbox $mailbox, Message $message): void {
 		$query = new Horde_Imap_Client_Fetch_Query();
 		$query->flags();

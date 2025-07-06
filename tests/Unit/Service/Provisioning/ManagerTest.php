@@ -1,4 +1,5 @@
 <?php
+
 /**
  * SPDX-FileCopyrightText: 2019 Nextcloud GmbH and Nextcloud contributors
  * SPDX-License-Identifier: AGPL-3.0-or-later
@@ -126,7 +127,7 @@ class ManagerTest extends TestCase {
 		$config->setProvisioningDomain('*');
 		$config->setEmailTemplate('%USER%@batman.com');
 		$configs = [$config];
-		$account = $this->createMock(MailAccount::class);
+		$account = new MailAccount();
 		$this->mock->getParameter('mailAccountMapper')
 			->expects($this->once())
 			->method('findProvisionedAccount')
@@ -223,7 +224,7 @@ class ManagerTest extends TestCase {
 	public function testUpdateLoginPassword(): void {
 		/** @var IUser|MockObject $user */
 		$user = $this->createMock(IUser::class);
-		$account = $this->createMock(MailAccount::class);
+		$account = new MailAccount();
 		$this->mock->getParameter('mailAccountMapper')
 			->expects($this->once())
 			->method('findProvisionedAccount')
@@ -242,7 +243,7 @@ class ManagerTest extends TestCase {
 	public function testUpdateMasterPasswordWithExistingLoginPassword(): void {
 		/** @var IUser|MockObject $user */
 		$user = $this->createMock(IUser::class);
-		$account = $this->createMock(MailAccount::class);
+		$account = new MailAccount();
 		$this->mock->getParameter('mailAccountMapper')
 			->expects($this->once())
 			->method('findProvisionedAccount')
@@ -267,7 +268,7 @@ class ManagerTest extends TestCase {
 	public function testUpdateMasterPasswordWithoutLoginPassword(): void {
 		/** @var IUser|MockObject $user */
 		$user = $this->createMock(IUser::class);
-		$account = $this->createMock(MailAccount::class);
+		$account = new MailAccount();
 		$this->mock->getParameter('mailAccountMapper')
 			->expects($this->once())
 			->method('findProvisionedAccount')

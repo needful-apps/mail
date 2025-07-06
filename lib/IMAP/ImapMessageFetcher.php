@@ -319,8 +319,8 @@ class ImapMessageFetcher {
 			}
 		}
 
-		$isAttachment = ($p->isAttachment() || $p->getType() === 'message/rfc822') &&
-			!in_array($p->getType(), ['application/pgp-signature', 'application/pkcs7-signature', 'application/x-pkcs7-signature']);
+		$isAttachment = ($p->isAttachment() || $p->getType() === 'message/rfc822')
+			&& !in_array($p->getType(), ['application/pgp-signature', 'application/pkcs7-signature', 'application/x-pkcs7-signature']);
 
 		// Regular attachments
 		if ($isAttachment) {
@@ -494,7 +494,12 @@ class ImapMessageFetcher {
 		if ($utf8 !== false) {
 			return $utf8;
 		}
-		return iconv('UTF-8', 'UTF-8//IGNORE', $subject);
+		$utf8Ignored = iconv('UTF-8', 'UTF-8//IGNORE', $subject);
+		if ($utf8Ignored === false) {
+			// Give up
+			return $subject;
+		}
+		return $utf8Ignored;
 	}
 
 	private function parseHeaders(Horde_Imap_Client_Data_Fetch $fetch): void {

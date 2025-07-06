@@ -3,13 +3,14 @@
     "Work" : "Arbeid",
     "Personal" : "Personleg",
     "Mail" : "Post",
+    "Save" : "Lagre",
+    "Connect" : "Kopla til",
     "Name" : "Namn",
     "Password" : "Passord",
     "None" : "Ingen",
-    "Save" : "Lagre",
-    "Connect" : "Kopla til",
     "Signature" : "Signatur",
     "Cancel" : "Avbryt",
+    "Accounts" : "Accounts",
     "General" : "Generelt",
     "Keyboard shortcuts" : "Tastatursnarvegar",
     "Delete" : "Ta bort",
@@ -18,10 +19,10 @@
     "Refresh" : "Last inn på nytt",
     "Choose" : "Vel",
     "Favorite" : "Favoritt",
-    "Select" : "Vel",
     "Back" : "Tilbake",
     "Description" : "Skildring",
     "Create" : "Lag",
+    "Select" : "Vel",
     "Comment" : "Kommentér",
     "Remove" : "Fjern",
     "Other" : "Anna",
@@ -29,12 +30,17 @@
     "Quota" : "Kvote",
     "Saving" : "Lagrar",
     "Rename" : "Endra namn",
-    "Retry" : "Forsøk att",
     "Reply" : "Svare",
+    "Retry" : "Forsøk att",
     "Add" : "Legg til",
     "Close" : "Lat att",
     "Date" : "Dato",
     "Tags" : "Emneord",
+<<<<<<< HEAD
+=======
+    "Recipient" : "Mottakar",
+    "contains" : "inneheld",
+>>>>>>> 5d13aacd343883b2c7ace01db7280a0664c0a6e4
     "Client ID" : "Klient-ID",
     "User" : "Bruker",
     "Host" : "Tenar",
@@ -43,6 +49,7 @@
     "All" : "Alle",
     "Favorites" : "Favorit",
     "Sent" : "Sendt",
-    "Message sent" : "Melding sendt"
+    "Message sent" : "Melding sendt",
+    "Actions" : "Handlingar"
 },"pluralForm" :"nplurals=2; plural=(n != 1);"
 }

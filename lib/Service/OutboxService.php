@@ -11,7 +11,6 @@ namespace OCA\Mail\Service;
 
 use OCA\Mail\Account;
 use OCA\Mail\Contracts\IMailManager;
-use OCA\Mail\Contracts\IMailTransmission;
 use OCA\Mail\Db\LocalMessage;
 use OCA\Mail\Db\LocalMessageMapper;
 use OCA\Mail\Db\Recipient;
@@ -29,8 +28,7 @@ use Psr\Log\LoggerInterface;
 use Throwable;
 
 class OutboxService {
-	/** @var IMailTransmission */
-	private $transmission;
+
 
 	/** @var LocalMessageMapper */
 	private $mapper;
@@ -56,7 +54,11 @@ class OutboxService {
 	/** @var LoggerInterface */
 	private $logger;
 
+<<<<<<< HEAD
 	public function __construct(IMailTransmission  $transmission,
+=======
+	public function __construct(
+>>>>>>> 5d13aacd343883b2c7ace01db7280a0664c0a6e4
 		LocalMessageMapper $mapper,
 		AttachmentService  $attachmentService,
 		IEventDispatcher    $eventDispatcher,
@@ -67,7 +69,6 @@ class OutboxService {
 		LoggerInterface $logger,
 		private Chain $sendChain,
 	) {
-		$this->transmission = $transmission;
 		$this->mapper = $mapper;
 		$this->attachmentService = $attachmentService;
 		$this->eventDispatcher = $eventDispatcher;

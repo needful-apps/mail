@@ -223,42 +223,58 @@
 		</div>
 		<div class="app-description">
 			<h3>
-				{{
-					t(
-						'mail',
-						'Microsoft integration'
-					)
-				}}
+				{{ t('mail', 'Microsoft integration') }}
 			</h3>
 			<article>
 				<p>
-					{{
-						t(
-							'mail',
-							'Microsoft allows users to access their email via IMAP. For security reasons this access is only possible with an OAuth 2.0 connection.'
-						)
-					}}
+					{{ t('mail', 'Microsoft requires you to access your emails via IMAP using OAuth 2.0 authentication. To do this, you need to register an app with Microsoft Entra ID, formerly known as Microsoft Azure Active Directory.') }}
 				</p>
 				<p>
-					{{
-						t(
-							'mail',
-							'You have to register a new app in the Microsoft Azure Active Directory portal. Add the URL {url} as redirect URI.',
-							{
-								url: microsoftOauthRedirectUrl,
-							}
-						)
-					}}
+					{{ t('mail', 'Redirect URI') }}: <code>{{ microsoftOauthRedirectUrl }}</code>
 				</p>
+				<a :href="microsoftOauthDocs" target="_blank" rel="noopener noreferrer">{{ t('mail', 'For more details, please click here to open our documentation.') }}</a>
 			</article>
 			<MicrosoftAdminOauthSettings :tenant-id="microsoftOauthTenantId" :client-id="microsoftOauthClientId" />
 		</div>
+<<<<<<< HEAD
 		<SupabaseAdminSettings />
+=======
+		<div class="app-description">
+			<h3>{{ t('mail', 'User Interface Preference Defaults') }}</h3>
+			<article>
+				<p>
+					{{ t('mail', 'These settings are used to pre-configure the user interface preferences they can be overridden by the user in the mail settings') }}
+				</p>
+			</article>
+			<br>
+			<article>
+				<p>
+					{{ t('mail', 'Message View Mode') }}
+				</p>
+				<p>
+					<NcCheckboxRadioSwitch type="radio"
+						name="message_view_mode_radio"
+						value="threaded"
+						:checked.sync="layoutMessageView"
+						@update:checked="setLayoutMessageView('threaded')">
+						{{ t('mail', 'Show all messages in thread') }}
+					</NcCheckboxRadioSwitch>
+					<NcCheckboxRadioSwitch type="radio"
+						name="message_view_mode_radio"
+						value="singleton"
+						:checked.sync="layoutMessageView"
+						@update:checked="setLayoutMessageView('singleton')">
+						{{ t('mail', 'Show only the selected message') }}
+					</NcCheckboxRadioSwitch>
+				</p>
+			</article>
+		</div>
+>>>>>>> 5d13aacd343883b2c7ace01db7280a0664c0a6e4
 	</SettingsSection>
 </template>
 
 <script>
-import ButtonVue from '@nextcloud/vue/dist/Components/NcButton.js'
+import ButtonVue from '@nextcloud/vue/components/NcButton'
 import GmailAdminOauthSettings from './GmailAdminOauthSettings.vue'
 import logger from '../../logger.js'
 import MicrosoftAdminOauthSettings from './MicrosoftAdminOauthSettings.vue'
@@ -268,9 +284,9 @@ import { loadState } from '@nextcloud/initial-state'
 import ProvisioningSettings from './ProvisioningSettings.vue'
 import AntiSpamSettings from './AntiSpamSettings.vue'
 import IconAdd from 'vue-material-design-icons/Plus.vue'
-import IconSettings from 'vue-material-design-icons/Cog.vue'
-import SettingsSection from '@nextcloud/vue/dist/Components/NcSettingsSection.js'
-import NcCheckboxRadioSwitch from '@nextcloud/vue/dist/Components/NcCheckboxRadioSwitch.js'
+import IconSettings from 'vue-material-design-icons/CogOutline.vue'
+import SettingsSection from '@nextcloud/vue/components/NcSettingsSection'
+import NcCheckboxRadioSwitch from '@nextcloud/vue/components/NcCheckboxRadioSwitch'
 import {
 	disableProvisioning,
 	createProvisioningSettings,
@@ -280,6 +296,7 @@ import {
 	updateLlmEnabled,
 	updateEnabledSmartReply,
 	setImportanceClassificationEnabledByDefault,
+	setLayoutMessageView,
 } from '../../service/SettingsService.js'
 
 const googleOauthClientId = loadState('mail', 'google_oauth_client_id', null) ?? undefined
@@ -317,6 +334,7 @@ export default {
 			googleOauthRedirectUrl,
 			microsoftOauthTenantId,
 			microsoftOauthClientId,
+			microsoftOauthDocs: loadState('mail', 'microsoft_oauth_docs'),
 			microsoftOauthRedirectUrl,
 			preview: {
 				provisioningDomain: '',
@@ -345,6 +363,7 @@ export default {
 			isLlmFreePromptConfigured: loadState('mail', 'enabled_llm_free_prompt_backend'),
 			isClassificationEnabledByDefault: loadState('mail', 'llm_processing', true),
 			isImportanceClassificationEnabledByDefault: loadState('mail', 'importance_classification_default', true),
+			layoutMessageView: loadState('mail', 'layout_message_view'),
 		}
 	},
 	methods: {
@@ -412,6 +431,9 @@ export default {
 				showError(t('mail', 'Could not save default classification setting'))
 				logger.error('Could not save default classification setting', { error })
 			}
+		},
+		async setLayoutMessageView(value) {
+			await setLayoutMessageView(value)
 		},
 	},
 }

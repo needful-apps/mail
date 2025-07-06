@@ -1,4 +1,5 @@
 <?php
+
 /**
  * SPDX-FileCopyrightText: 2024 Nextcloud GmbH and Nextcloud contributors
  * SPDX-License-Identifier: AGPL-3.0-or-later
@@ -24,7 +25,7 @@ class ReplyToCheckTest extends TestCase {
 		$this->service = new ReplyToCheck($this->l10n);
 	}
 
-	
+
 	public function testNoEmail(): void {
 		$email = 'jhon@example.com';
 		$result = $this->service->run($email, null);

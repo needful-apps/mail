@@ -36,7 +36,7 @@
 		</div>
 		<p v-if="moreThanOne" class="attachments-button-wrapper">
 			<FilePicker v-if="isFilePickerOpen"
-				:title="t('mail', 'Choose a folder to store the attachments in')"
+				:name="t('mail', 'Choose a folder to store the attachments in')"
 				:buttons="saveAttachementButtons"
 				:allow-pick-directory="true"
 				:multiselect="false"
@@ -69,8 +69,8 @@ import { saveAttachmentsToFiles } from '../service/AttachmentService.js'
 import MessageAttachment from './MessageAttachment.vue'
 import Logger from '../logger.js'
 
-import Download from 'vue-material-design-icons/Download.vue'
-import CloudDownload from 'vue-material-design-icons/CloudDownload.vue'
+import Download from 'vue-material-design-icons/DownloadOutline.vue'
+import CloudDownload from 'vue-material-design-icons/CloudDownloadOutline.vue'
 import ChevronDown from 'vue-material-design-icons/ChevronDown.vue'
 import ChevronUp from 'vue-material-design-icons/ChevronUp.vue'
 

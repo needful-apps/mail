@@ -43,12 +43,13 @@
 </template>
 
 <script>
-import AccountMultipleIcon from 'vue-material-design-icons/AccountMultiple.vue'
-import CalendarIcon from 'vue-material-design-icons/Calendar.vue'
-import MapMarkerIcon from 'vue-material-design-icons/MapMarker.vue'
-import { getReadableTimezoneName } from '@nextcloud/calendar-js'
+import AccountMultipleIcon from 'vue-material-design-icons/AccountMultipleOutline.vue'
+import CalendarIcon from 'vue-material-design-icons/CalendarOutline.vue'
+import MapMarkerIcon from 'vue-material-design-icons/MapMarkerOutline.vue'
+import { getReadableTimezoneName } from '@nextcloud/timezones'
 import moment from '@nextcloud/moment'
 import { removeMailtoPrefix } from '../../util/eventAttendee.js'
+import { DateTimeValue } from '@nextcloud/calendar-js'
 
 /**
  * Check whether two dates are on the exact same day, month and year.

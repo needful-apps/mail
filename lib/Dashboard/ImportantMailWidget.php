@@ -9,10 +9,15 @@ declare(strict_types=1);
 
 namespace OCA\Mail\Dashboard;
 
+use OCA\Mail\Service\Search\Flag;
+use OCA\Mail\Service\Search\GlobalSearchQuery;
+use OCA\Mail\Service\Search\SearchQuery;
+
 class ImportantMailWidget extends MailWidget {
 	/**
 	 * @inheritDoc
 	 */
+	#[\Override]
 	public function getId(): string {
 		return 'mail';
 	}
@@ -20,14 +25,16 @@ class ImportantMailWidget extends MailWidget {
 	/**
 	 * @inheritDoc
 	 */
+	#[\Override]
 	public function getTitle(): string {
 		return $this->l10n->t('Important mail');
 	}
 
-	/**
-	 * @inheritDoc
-	 */
-	public function getSearchFilter(): string {
-		return 'is:important';
+	#[\Override]
+	public function getSearchQuery(string $userId): SearchQuery {
+		$query = new GlobalSearchQuery();
+		$query->addFlag(Flag::is(Flag::IMPORTANT));
+		$query->setExcludeMailboxIds($this->getMailboxIdsToExclude($userId));
+		return $query;
 	}
 }

@@ -54,8 +54,8 @@ class TransformURLScheme extends HTMLPurifier_URIFilter {
 	 * @param \HTMLPurifier_Context $context
 	 * @return bool
 	 */
+	#[\Override]
 	public function filter(&$uri, $config, $context) {
-		/** @var \HTMLPurifier_Context $context */
 
 		if ($uri->scheme === null) {
 			$uri->scheme = 'https';
@@ -91,10 +91,10 @@ class TransformURLScheme extends HTMLPurifier_URIFilter {
 		$originalURL = urlencode($uri->scheme . '://' . $uri->host);
 
 		// Add the port if it's not a default port
-		if ($uri->port !== null &&
-			!($uri->scheme === 'http' && $uri->port === 80) &&
-			!($uri->scheme === 'https' && $uri->port === 443) &&
-			!($uri->scheme === 'ftp' && $uri->port === 21)) {
+		if ($uri->port !== null
+			&& !($uri->scheme === 'http' && $uri->port === 80)
+			&& !($uri->scheme === 'https' && $uri->port === 443)
+			&& !($uri->scheme === 'ftp' && $uri->port === 21)) {
 			$originalURL = $originalURL . urlencode(':' . $uri->port);
 		}
 

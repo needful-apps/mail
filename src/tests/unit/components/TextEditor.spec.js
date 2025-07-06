@@ -4,7 +4,6 @@
  */
 
 import {createLocalVue, shallowMount} from '@vue/test-utils'
-import Vuex from 'vuex'
 import mitt from 'mitt'
 
 import Nextcloud from '../../../mixins/Nextcloud.js'
@@ -15,7 +14,6 @@ import MailPlugin from '../../../ckeditor/mail/MailPlugin.js'
 
 const localVue = createLocalVue()
 
-localVue.use(Vuex)
 localVue.mixin(Nextcloud)
 
 describe('TextEditor', () => {
@@ -60,7 +58,7 @@ describe('TextEditor', () => {
 		expect(wrapper.emitted().input[0]).toEqual(['bonjour bonjour'])
 	})
 
-	it('emit event on ready', async() => {
+	it('emit event on ready', async () => {
 		const wrapper = shallowMount(TextEditor, {
 			localVue,
 			propsData: {
@@ -69,36 +67,64 @@ describe('TextEditor', () => {
 			},
 		})
 
+		// Mock DOM refs
+		wrapper.vm.$refs.toolbarContainer = document.createElement('div')
+		wrapper.vm.$refs.editableContainer = document.createElement('div')
+
 		const editor = await VirtualTestEditor.create({
+			licenseKey: 'GPL',
 			initialData: '<p>bonjour bonjour</p>',
 			plugins: [ParagraphPlugin],
 		})
+
+		editor.ui = {
+			view: {
+				toolbar: {
+					// eslint-disable-next-line no-mixed-spaces-and-tabs
+ 					element: document.createElement('div'),
+					items: [],
+				},
+				editable: { element: document.createElement('div') },
+			},
+		}
 
 		wrapper.vm.onEditorReady(editor)
 
 		expect(wrapper.emitted().ready[0]).toBeTruthy()
 	})
-
-	it('register conversion to add margin: 0px to every <p> element',
-		async() => {
-			const wrapper = shallowMount(TextEditor, {
-				localVue,
-				propsData: {
-					value: '',
-					bus: mitt(),
-				},
-			})
-
-			const editor = await VirtualTestEditor.create({
-				initialData: '<p>bonjour bonjour</p>',
-				plugins: [ParagraphPlugin, MailPlugin],
-			})
-
-			wrapper.vm.onEditorReady(editor)
-
-			expect(wrapper.emitted().ready[0]).toBeTruthy()
-			expect(wrapper.emitted().ready[0][0].getData()).
-				toEqual('<p style="margin:0;">bonjour bonjour</p>')
+	it('register conversion to add margin: 0px to every <p> element', async () => {
+		const wrapper = shallowMount(TextEditor, {
+			localVue,
+			propsData: {
+				value: '',
+				bus: mitt(),
+			},
 		})
+
+		// Mock DOM refs
+		wrapper.vm.$refs.toolbarContainer = document.createElement('div')
+		wrapper.vm.$refs.editableContainer = document.createElement('div')
+
+		const editor = await VirtualTestEditor.create({
+			licenseKey: 'GPL',
+			initialData: '<p>bonjour bonjour</p>',
+			plugins: [ParagraphPlugin, MailPlugin],
+		})
+
+		editor.ui = {
+			view: {
+				toolbar: { element: document.createElement('div'),
+					items: [],
+				},
+				editable: { element: document.createElement('div') },
+			},
+		}
+
+		wrapper.vm.onEditorReady(editor)
+
+		expect(wrapper.emitted().ready[0]).toBeTruthy()
+		expect(wrapper.emitted().ready[0][0].getData())
+			.toEqual('<p style="margin:0;">bonjour bonjour</p>')
+	})
 
 })

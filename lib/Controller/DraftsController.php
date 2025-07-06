@@ -73,11 +73,20 @@ class DraftsController extends Controller {
 	 */
 	#[TrapError]
 	public function create(
+<<<<<<< HEAD
 		int     $accountId,
 		string  $subject,
 		string  $body,
 		string  $editorBody,
 		bool    $isHtml,
+=======
+		int $accountId,
+		string $subject,
+		?string $bodyPlain,
+		?string $bodyHtml,
+		?string $editorBody,
+		bool $isHtml,
+>>>>>>> 5d13aacd343883b2c7ace01db7280a0664c0a6e4
 		?bool $smimeSign,
 		?bool $smimeEncrypt,
 		array   $to = [],
@@ -99,9 +108,10 @@ class DraftsController extends Controller {
 		$message->setAccountId($accountId);
 		$message->setAliasId($aliasId);
 		$message->setSubject($subject);
-		$message->setBody($body);
-		$message->setEditorBody($editorBody);
+		$message->setBodyPlain($bodyPlain);
+		$message->setBodyHtml($bodyHtml);
 		$message->setHtml($isHtml);
+		$message->setEditorBody($editorBody);
 		$message->setInReplyToMessageId($inReplyToMessageId);
 		$message->setUpdatedAt($this->timeFactory->getTime());
 		$message->setSendAt($sendAt);
@@ -140,11 +150,20 @@ class DraftsController extends Controller {
 	 */
 	#[TrapError]
 	public function update(int $id,
+<<<<<<< HEAD
 		int     $accountId,
 		string  $subject,
 		string  $body,
 		string  $editorBody,
 		bool    $isHtml,
+=======
+		int $accountId,
+		string $subject,
+		?string $bodyPlain,
+		?string $bodyHtml,
+		?string $editorBody,
+		bool $isHtml,
+>>>>>>> 5d13aacd343883b2c7ace01db7280a0664c0a6e4
 		?bool $smimeSign,
 		?bool $smimeEncrypt,
 		bool    $failed = false,
@@ -164,9 +183,10 @@ class DraftsController extends Controller {
 		$message->setAccountId($accountId);
 		$message->setAliasId($aliasId);
 		$message->setSubject($subject);
-		$message->setBody($body);
-		$message->setEditorBody($editorBody);
+		$message->setBodyPlain($bodyPlain);
+		$message->setBodyHtml($bodyHtml);
 		$message->setHtml($isHtml);
+		$message->setEditorBody($editorBody);
 		$message->setFailed($failed);
 		$message->setInReplyToMessageId($inReplyToMessageId);
 		$message->setSendAt($sendAt);

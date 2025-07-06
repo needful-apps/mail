@@ -43,6 +43,7 @@ class Account implements JsonSerializable {
 		return $this->account->getEmail();
 	}
 
+	#[\Override]
 	#[ReturnTypeWillChange]
 	public function jsonSerialize() {
 		return $this->account->toJson();
@@ -57,6 +58,13 @@ class Account implements JsonSerializable {
 	 */
 	public function getUserId() {
 		return $this->account->getUserId();
+	}
+
+	/**
+	 * @return bool
+	 */
+	public function getDebug(): bool {
+		return $this->account->getDebug();
 	}
 
 	/**

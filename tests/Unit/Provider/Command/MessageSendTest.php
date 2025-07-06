@@ -27,7 +27,7 @@ use OCP\Mail\Provider\Message;
 use PHPUnit\Framework\MockObject\MockObject;
 
 class MessageSendTest extends TestCase {
-	
+
 	private IConfig&MockObject $config;
 	private ITimeFactory&MockObject $time;
 	private AccountService&MockObject $accountService;
@@ -80,8 +80,8 @@ class MessageSendTest extends TestCase {
 			'type' => 0,
 			'accountId' => 100,
 			'subject' => 'World domination',
-			'body' => 'I have the most brilliant plan. Let me tell you all about it. What we do is, we',
-			'html' => true
+			'bodyPlain' => 'I have the most brilliant plan. Let me tell you all about it. What we do is, we',
+			'html' => false
 		];
 		// construct mail app attachment object
 		$this->localAttachmentData = [
@@ -236,7 +236,7 @@ class MessageSendTest extends TestCase {
 		$this->accountService->method('find')->will(
 			$this->throwException(new ClientException('Something went wrong'))
 		);
-		
+
 		// construct mail provider message
 		$mailMessage = $this->mailMessage;
 		// define exception condition

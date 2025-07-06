@@ -43,17 +43,21 @@
 				:class="{ 'one-line': oneLineLayout, 'junk-icon-style': !oneLineLayout }"
 				:data-starred="data.flags.$junk ? 'true' : 'false'"
 				@click.prevent="hasWriteAcl ? onToggleJunk() : false" />
-			<div class="app-content-list-item-icon">
-				<Avatar :display-name="addresses" :email="avatarEmail" />
-				<p v-if="selectMode" class="app-content-list-item-select-checkbox">
-					<input :id="`select-checkbox-${data.uid}`"
-						class="checkbox"
-						type="checkbox"
-						:checked="selected">
-					<label :for="`select-checkbox-${data.uid}`"
-						@click.exact.prevent="toggleSelected"
-						@click.shift.exact.prevent="onSelectMultiple" />
-				</p>
+			<div class="hovering-status"
+				:class="{ 'hover-active': hoveringAvatar && !selected }"
+				@mouseenter="hoveringAvatar = true"
+				@mouseleave="hoveringAvatar = false"
+				@click.stop.exact.prevent="toggleSelected"
+				@click.shift.exact.prevent="onSelectMultiple">
+				<template v-if="hoveringAvatar || selected">
+					<CheckIcon :size="28" class="check-icon" :class="{ 'app-content-list-item-avatar-selected': selected }" />
+				</template>
+				<template v-else>
+					<Avatar :display-name="addresses"
+						:email="avatarEmail"
+						:fetch-avatar="data.fetchAvatarFromClient"
+						:avatar="data.avatar" />
+				</template>
 			</div>
 		</template>
 		<template #subname>
@@ -66,19 +70,17 @@
 					<IconAttachment v-if="data.flags.hasAttachments === true"
 						class="attachment-icon-style"
 						:size="18" />
-					<span v-else-if="draft" class="draft">
-						<em>{{ t('mail', 'Draft: ') }}</em>
-					</span>
 					<span class="envelope__subtitle__subject"
-						:class="{'one-line': oneLineLayout }">
-						<span class="envelope__subtitle__subject__text" :class="{'one-line': oneLineLayout }">
-							{{ subjectForSubtitle }}
-						</span>
+						:class="{'one-line': oneLineLayout }"
+						dir="auto">
+						<span class="envelope__subtitle__subject__text" :class="{'one-line': oneLineLayout, draft }" v-html="subjectForSubtitle" />
 					</span>
 				</div>
 				<div v-if="data.encrypted || data.previewText"
-					class="envelope__preview-text">
-					{{ isEncrypted ? t('mail', 'Encrypted message') : data.previewText.trim() }}
+					class="envelope__preview-text"
+					:title="data.summary ? t('mail', 'This summary was AI generated') : null">
+					<SparkleIcon v-if="data.summary" :size="15" />
+					{{ isEncrypted ? t('mail', 'Encrypted message') : data.summary ? data.summary.trim() : data.previewText.trim() }}
 				</div>
 			</div>
 		</template>
@@ -152,15 +154,6 @@
 						data.flags.$junk ? t('mail', 'Mark not spam') : t('mail', 'Mark as spam')
 					}}
 				</ActionButton>
-				<ActionButton :close-after-click="true"
-					@click.prevent="toggleSelected">
-					<template #icon>
-						<CheckIcon :size="16" />
-					</template>
-					{{
-						selected ? t('mail', 'Unselect') : t('mail', 'Select')
-					}}
-				</ActionButton>
 				<ActionButton v-if="hasWriteAcl"
 					:close-after-click="true"
 					@click.prevent="onOpenTagModal">
@@ -195,7 +188,12 @@
 					<template #icon>
 						<OpenInNewIcon :size="16" />
 					</template>
-					{{ t('mail', 'Move thread') }}
+					<template v-if="layoutMessageViewThreaded">
+						{{ t('mail', 'Move thread') }}
+					</template>
+					<template v-else>
+						{{ t('mail', 'Move Message') }}
+					</template>
 				</ActionButton>
 				<ActionButton v-if="showArchiveButton && hasArchiveAcl"
 					:close-after-click="true"
@@ -204,7 +202,12 @@
 					<template #icon>
 						<ArchiveIcon :size="16" />
 					</template>
-					{{ t('mail', 'Archive thread') }}
+					<template v-if="layoutMessageViewThreaded">
+						{{ t('mail', 'Archive thread') }}
+					</template>
+					<template v-else>
+						{{ t('mail', 'Archive message') }}
+					</template>
 				</ActionButton>
 				<ActionButton v-if="hasDeleteAcl"
 					:close-after-click="true"
@@ -212,7 +215,12 @@
 					<template #icon>
 						<DeleteIcon :size="16" />
 					</template>
-					{{ t('mail', 'Delete thread') }}
+					<template v-if="layoutMessageViewThreaded">
+						{{ t('mail', 'Delete thread') }}
+					</template>
+					<template v-else>
+						{{ t('mail', 'Delete message') }}
+					</template>
 				</ActionButton>
 				<ActionButton :close-after-click="false"
 					@click="showMoreActionOptions">
@@ -255,13 +263,13 @@
 					</template>
 				</NcActionInput>
 
-				<ActionButton :aria-label="t('spreed', 'Set custom snooze')"
+				<ActionButton :aria-label="t('mail', 'Set custom snooze')"
 					close-after-click
 					@click.stop="setCustomSnooze(customSnoozeDateTime)">
 					<template #icon>
 						<CheckIcon :size="16" />
 					</template>
-					{{ t('spreed', 'Set custom snooze') }}
+					{{ t('mail', 'Set custom snooze') }}
 				</ActionButton>
 			</template>
 			<template v-if="moreActionsOpen">
@@ -316,7 +324,7 @@
 			<MoveModal v-if="showMoveModal"
 				:account="account"
 				:envelopes="[data]"
-				:move-thread="true"
+				:move-thread="listViewThreaded"
 				@move="onMove"
 				@close="onCloseMoveModal" />
 			<EventModal v-if="showEventModal"
@@ -341,18 +349,18 @@ import {
 	NcActionText as ActionText,
 } from '@nextcloud/vue'
 import EnvelopeSkeleton from './EnvelopeSkeleton.vue'
-import AlertOctagonIcon from 'vue-material-design-icons/AlertOctagon.vue'
+import AlertOctagonIcon from 'vue-material-design-icons/AlertOctagonOutline.vue'
 import Avatar from './Avatar.vue'
-import IconCreateEvent from 'vue-material-design-icons/Calendar.vue'
+import IconCreateEvent from 'vue-material-design-icons/CalendarOutline.vue'
+import SparkleIcon from 'vue-material-design-icons/CreationOutline.vue'
 import ClockOutlineIcon from 'vue-material-design-icons/ClockOutline.vue'
-import CheckIcon from 'vue-material-design-icons/Check.vue'
+import CheckIcon from 'vue-material-design-icons/CheckOutline.vue'
 import ChevronLeft from 'vue-material-design-icons/ChevronLeft.vue'
-import DeleteIcon from 'vue-material-design-icons/Delete.vue'
+import DeleteIcon from 'vue-material-design-icons/DeleteOutline.vue'
 import ArchiveIcon from 'vue-material-design-icons/PackageDown.vue'
 import TaskIcon from 'vue-material-design-icons/CheckboxMarkedCirclePlusOutline.vue'
 import DotsHorizontalIcon from 'vue-material-design-icons/DotsHorizontal.vue'
-// eslint-disable-next-line import/no-unresolved
-import importantSvg from '../../img/important.svg?raw'
+import importantSvg from '../../img/important.svg'
 import { DraggableEnvelopeDirective } from '../directives/drag-and-drop/draggable-envelope/index.js'
 import { buildRecipients as buildReplyRecipients } from '../ReplyBuilder.js'
 import { shortRelativeDatetime, messageDateTime } from '../util/shortRelativeDatetime.js'
@@ -365,28 +373,30 @@ import MoveModal from './MoveModal.vue'
 import OpenInNewIcon from 'vue-material-design-icons/OpenInNew.vue'
 import StarOutline from 'vue-material-design-icons/StarOutline.vue'
 import Star from 'vue-material-design-icons/Star.vue'
-import Reply from 'vue-material-design-icons/Reply.vue'
-import EmailRead from 'vue-material-design-icons/EmailOpen.vue'
-import EmailUnread from 'vue-material-design-icons/Email.vue'
+import Reply from 'vue-material-design-icons/ReplyOutline.vue'
+import EmailRead from 'vue-material-design-icons/EmailOpenOutline.vue'
+import EmailUnread from 'vue-material-design-icons/EmailOutline.vue'
 import IconAttachment from 'vue-material-design-icons/Paperclip.vue'
 import ImportantIcon from './icons/ImportantIcon.vue'
-import IconBullet from 'vue-material-design-icons/CheckboxBlankCircle.vue'
+import IconBullet from 'vue-material-design-icons/CheckboxBlankCircleOutline.vue'
 import JunkIcon from './icons/JunkIcon.vue'
 import PlusIcon from 'vue-material-design-icons/Plus.vue'
-import TagIcon from 'vue-material-design-icons/Tag.vue'
+import TagIcon from 'vue-material-design-icons/TagOutline.vue'
 import TagModal from './TagModal.vue'
 import EventModal from './EventModal.vue'
 import TaskModal from './TaskModal.vue'
 import EnvelopePrimaryActions from './EnvelopePrimaryActions.vue'
+import escapeHtml from 'escape-html'
 import { hiddenTags } from './tags.js'
 import { generateUrl } from '@nextcloud/router'
 import { isPgpText } from '../crypto/pgp.js'
 import { mailboxHasRights } from '../util/acl.js'
-import DownloadIcon from 'vue-material-design-icons/Download.vue'
-import CalendarClock from 'vue-material-design-icons/CalendarClock.vue'
+import DownloadIcon from 'vue-material-design-icons/DownloadOutline.vue'
+import CalendarClock from 'vue-material-design-icons/CalendarClockOutline.vue'
 import AlarmIcon from 'vue-material-design-icons/Alarm.vue'
 import moment from '@nextcloud/moment'
-import { mapGetters } from 'vuex'
+import { mapState, mapStores } from 'pinia'
+import useMainStore from '../store/mainStore.js'
 import { FOLLOW_UP_TAG_LABEL } from '../store/constants.js'
 import { translateTagDisplayName } from '../util/tag.js'
 
@@ -414,6 +424,7 @@ export default {
 		PlusIcon,
 		TagIcon,
 		TagModal,
+		SparkleIcon,
 		Star,
 		StarOutline,
 		EmailRead,
@@ -477,6 +488,7 @@ export default {
 			snoozeOptions: false,
 			customSnoozeDateTime: new Date(moment().add(2, 'hours').minute(0).second(0).valueOf()),
 			overwriteOneLineMobile: false,
+			hoveringAvatar: false,
 		}
 	},
 	mounted() {
@@ -485,14 +497,18 @@ export default {
 		window.addEventListener('resize', this.onWindowResize)
 	},
 	computed: {
-		...mapGetters([
+		...mapStores(useMainStore),
+		...mapState(useMainStore, [
 			'isSnoozeDisabled',
 		]),
 		messageLongDate() {
 			return messageDateTime(new Date(this.data.dateInt))
 		},
 		oneLineLayout() {
-			return this.overwriteOneLineMobile ? false : this.$store.getters.getPreference('layout-mode', 'vertical-split') === 'no-split'
+			return this.overwriteOneLineMobile ? false : this.mainStore.getPreference('layout-mode', 'vertical-split') === 'no-split'
+		},
+		layoutMessageViewThreaded() {
+			return this.mainStore.getPreference('layout-message-view', 'threaded') === 'threaded'
 		},
 		hasMultipleRecipients() {
 			if (!this.account) {
@@ -511,7 +527,7 @@ export default {
 		},
 		account() {
 			const accountId = this.data.accountId
-			return this.$store.getters.getAccount(accountId)
+			return this.mainStore.getAccount(accountId)
 		},
 		link() {
 			if (this.draft) {
@@ -572,12 +588,12 @@ export default {
 				|| (this.data.previewText && isPgpText(this.data.previewText)) // PGP/Mailvelope
 		},
 		isImportant() {
-			return this.$store.getters
+			return this.mainStore
 				.getEnvelopeTags(this.data.databaseId)
 				.some((tag) => tag.imapLabel === '$label1')
 		},
 		tags() {
-			let tags = this.$store.getters.getEnvelopeTags(this.data.databaseId).filter(
+			let tags = this.mainStore.getEnvelopeTags(this.data.databaseId).filter(
 				(tag) => tag.imapLabel && tag.imapLabel !== '$label1' && !(tag.displayName.toLowerCase() in hiddenTags),
 			)
 
@@ -605,9 +621,17 @@ export default {
 		 * @return {string}
 		 */
 		subjectForSubtitle() {
-			// We have to use || here (instead of ??) because the subject might be '', null
-			// or undefined.
-			return this.data.subject || this.t('mail', 'No subject')
+			const subject = this.data.subject || this.t('mail', 'No subject')
+			if (this.draft) {
+				return this.t('mail', '{markup-start}Draft:{markup-end} {subject}', {
+					'markup-start': '<em>',
+					'markup-end': '</em>',
+					subject: escapeHtml(subject),
+				}, {
+					escape: false,
+				})
+			}
+			return subject
 		},
 		/**
 		 * Link to download the whole message (.eml).
@@ -639,7 +663,7 @@ export default {
 			return mailboxHasRights(this.mailbox, 'w')
 		},
 		archiveMailbox() {
-			return this.$store.getters.getMailbox(this.account.archiveMailboxId)
+			return this.mainStore.getMailbox(this.account.archiveMailboxId)
 		},
 		isSnoozedMailbox() {
 			return this.mailbox.databaseId === this.account.snoozeMailboxId
@@ -713,7 +737,7 @@ export default {
 		},
 		async onClick(event) {
 			if (!event.ctrlKey && this.draft && !event.defaultPrevented) {
-				await this.$store.dispatch('startComposerSession', {
+				await this.mainStore.startComposerSession({
 					data: {
 						...this.data,
 						draftId: this.data.databaseId,
@@ -726,23 +750,23 @@ export default {
 			this.$emit('select-multiple')
 		},
 		onToggleImportant() {
-			this.$store.dispatch('toggleEnvelopeImportant', this.data)
+			this.mainStore.toggleEnvelopeImportant(this.data)
 		},
 		onToggleFlagged() {
-			this.$store.dispatch('toggleEnvelopeFlagged', this.data)
+			this.mainStore.toggleEnvelopeFlagged(this.data)
 		},
 		onToggleSeen() {
-			this.$store.dispatch('toggleEnvelopeSeen', { envelope: this.data })
+			this.mainStore.toggleEnvelopeSeen({ envelope: this.data })
 		},
 		async onToggleJunk() {
-			const removeEnvelope = await this.$store.dispatch('moveEnvelopeToJunk', this.data)
+			const removeEnvelope = await this.mainStore.moveEnvelopeToJunk(this.data)
 
 			if (this.isImportant) {
-				await this.$store.dispatch('toggleEnvelopeImportant', this.data)
+				await this.mainStore.toggleEnvelopeImportant(this.data)
 			}
 
 			if (!this.data.flags.seen) {
-				await this.$store.dispatch('toggleEnvelopeSeen', { envelope: this.data })
+				await this.mainStore.toggleEnvelopeSeen({ envelope: this.data })
 			}
 
 			/**
@@ -762,7 +786,7 @@ export default {
 				await this.$emit('delete', this.data.databaseId)
 			}
 
-			await this.$store.dispatch('toggleEnvelopeJunk', {
+			await this.mainStore.toggleEnvelopeJunk({
 				envelope: this.data,
 				removeEnvelope,
 			})
@@ -774,9 +798,15 @@ export default {
 			this.$emit('delete', this.data.databaseId)
 
 			try {
-				await this.$store.dispatch('deleteThread', {
-					envelope: this.data,
-				})
+				if (this.layoutMessageViewThreaded) {
+					await this.mainStore.deleteThread({
+						envelope: this.data,
+					})
+				} else {
+					await this.mainStore.deleteMessage({
+						id: this.data.databaseId,
+					})
+				}
 			} catch (error) {
 				showError(await matchError(error, {
 					[NoTrashMailboxConfiguredError.getName()]() {
@@ -808,10 +838,17 @@ export default {
 			this.$emit('archive', this.data.databaseId)
 
 			try {
-				await this.$store.dispatch('moveThread', {
-					envelope: this.data,
-					destMailboxId: this.account.archiveMailboxId,
-				})
+				if (this.layoutMessageViewThreaded) {
+					await this.mainStore.moveThread({
+						envelope: this.data,
+						destMailboxId: this.account.archiveMailboxId,
+					})
+				} else {
+					await this.mainStore.moveMessage({
+						id: this.data.databaseId,
+						destMailboxId: this.account.archiveMailboxId,
+					})
+				}
 			} catch (error) {
 				logger.error('could not archive message', error)
 				showError(t('mail', 'Could not archive message'))
@@ -822,15 +859,23 @@ export default {
 			this.setSelected(false)
 
 			if (!this.account.snoozeMailboxId) {
-				await this.$store.dispatch('createAndSetSnoozeMailbox', this.account)
+				await this.mainStore.createAndSetSnoozeMailbox(this.account)
 			}
 
 			try {
-				await this.$store.dispatch('snoozeThread', {
-					envelope: this.data,
-					unixTimestamp: timestamp / 1000,
-					destMailboxId: this.account.snoozeMailboxId,
-				})
+				if (this.layoutMessageViewThreaded) {
+					await this.mainStore.snoozeThread({
+						envelope: this.data,
+						unixTimestamp: timestamp / 1000,
+						destMailboxId: this.account.snoozeMailboxId,
+					})
+				} else {
+					await this.mainStore.snoozeMessage({
+						id: this.data.databaseId,
+						unixTimestamp: timestamp / 1000,
+						destMailboxId: this.account.snoozeMailboxId,
+					})
+				}
 				showSuccess(t('mail', 'Thread was snoozed'))
 			} catch (error) {
 				logger.error('could not snooze thread', error)
@@ -842,9 +887,15 @@ export default {
 			this.setSelected(false)
 
 			try {
-				await this.$store.dispatch('unSnoozeThread', {
-					envelope: this.data,
-				})
+				if (this.layoutMessageViewThreaded) {
+					await this.mainStore.unSnoozeThread({
+						envelope: this.data,
+					})
+				} else {
+					await this.mainStore.unSnoozeMessage({
+						id: this.data.databaseId,
+					})
+				}
 				showSuccess(t('mail', 'Thread was unsnoozed'))
 			} catch (error) {
 				logger.error('Could not unsnooze thread', error)
@@ -852,7 +903,7 @@ export default {
 			}
 		},
 		async onOpenEditAsNew() {
-			await this.$store.dispatch('startComposerSession', {
+			await this.mainStore.startComposerSession({
 				templateMessageId: this.data.databaseId,
 				data: this.data,
 			})
@@ -922,15 +973,34 @@ export default {
 			text-overflow: ellipsis;
 			white-space: nowrap;
 			line-height: var(--default-line-height);
+			&__text {
+				&.draft {
+					line-height: 130%;
+					/* deep because there is no data attribute for the em rendered from JS output */
+					::v-deep em {
+						font-style: italic;
+					}
+				}
+			}
 		}
 	}
 	&__preview-text {
 		color: var(--color-text-maxcontrast);
-		white-space: nowrap;
 		overflow: hidden;
-		text-overflow: ellipsis;
 		font-weight: initial;
-		flex: 1 1;
+		max-height: calc(var(--default-font-size) * var(--default-line-height) * 2);
+
+		/* Weird CSS hacks to make text ellipsize without white-space: nowrap */
+		display: -webkit-box;
+		-webkit-line-clamp: 2;
+		-webkit-box-orient: vertical;
+
+		.material-design-icon {
+			display: inline;
+
+			position: relative;
+			top: 2px;
+		}
 	}
 }
 
@@ -984,15 +1054,6 @@ export default {
 	font-weight: bold;
 }
 
-.list-item-style {
-	.draft {
-		line-height: 130%;
-
-		em {
-			font-style: italic;
-		}
-	}
-}
 .junk-icon-style {
 	opacity: .2;
 	display: flex;
@@ -1128,4 +1189,31 @@ export default {
 	text-overflow: ellipsis;
 	overflow: hidden;
 }
+.app-content-list-item-avatar-selected {
+	background-color: var(--color-primary-element);
+	color: var(--color-primary-light);
+	border-radius: 32px;
+	&:hover {
+		background-color: var(--color-primary-element);
+		color: var(--color-primary-light);
+		border-radius: 32px;
+	}
+}
+.hover-active {
+	&:hover {
+		color: var(--color-primary-hover);
+		background-color: var(--color-primary-light-hover);
+		border-radius: 32px;
+	}
+}
+
+.check-icon {
+	border-radius: 32px;
+	width: 40px;
+	height: 40px;
+	display: flex;
+	align-items: center;
+	justify-content: center;
+}
+
 </style>

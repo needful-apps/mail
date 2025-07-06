@@ -13,7 +13,6 @@ use Horde_Imap_Client;
 use OCA\Mail\Account;
 use OCA\Mail\Contracts\IMailSearch;
 use OCA\Mail\Db\Mailbox;
-use OCA\Mail\Db\MailboxMapper;
 use OCA\Mail\Db\Message;
 use OCA\Mail\Db\MessageMapper;
 use OCA\Mail\Exception\ClientException;
@@ -30,9 +29,6 @@ class MailSearch implements IMailSearch {
 	/** @var FilterStringParser */
 	private $filterStringParser;
 
-	/** @var MailboxMapper */
-	private $mailboxMapper;
-
 	/** @var ImapSearchProvider */
 	private $imapSearchProvider;
 
@@ -46,19 +42,18 @@ class MailSearch implements IMailSearch {
 	private $timeFactory;
 
 	public function __construct(FilterStringParser $filterStringParser,
-		MailboxMapper $mailboxMapper,
 		ImapSearchProvider $imapSearchProvider,
 		MessageMapper $messageMapper,
 		PreviewEnhancer $previewEnhancer,
 		ITimeFactory $timeFactory) {
 		$this->filterStringParser = $filterStringParser;
-		$this->mailboxMapper = $mailboxMapper;
 		$this->imapSearchProvider = $imapSearchProvider;
 		$this->messageMapper = $messageMapper;
 		$this->previewEnhancer = $previewEnhancer;
 		$this->timeFactory = $timeFactory;
 	}
 
+	#[\Override]
 	public function findMessage(Account $account,
 		Mailbox $mailbox,
 		Message $message): Message {
@@ -80,18 +75,22 @@ class MailSearch implements IMailSearch {
 	 * @param string|null $filter
 	 * @param int|null $cursor
 	 * @param int|null $limit
+	 * @param string|null $view
 	 *
 	 * @return Message[]
 	 *
 	 * @throws ClientException
 	 * @throws ServiceException
 	 */
+	#[\Override]
 	public function findMessages(Account $account,
 		Mailbox $mailbox,
 		string $sortOrder,
 		?string $filter,
 		?int $cursor,
-		?int $limit): array {
+		?int $limit,
+		?string $userId,
+		?string $view): array {
 		if ($mailbox->hasLocks($this->timeFactory->getTime())) {
 			throw MailboxLockedException::from($mailbox);
 		}
@@ -102,6 +101,9 @@ class MailSearch implements IMailSearch {
 		$query = $this->filterStringParser->parse($filter);
 		if ($cursor !== null) {
 			$query->setCursor($cursor);
+		}
+		if ($view !== null) {
+			$query->setThreaded($view === self::VIEW_THREADED);
 		}
 		// In flagged we don't want anything but flagged messages
 		if ($mailbox->isSpecialUse(Horde_Imap_Client::SPECIALUSE_FLAGGED)) {
@@ -118,29 +120,24 @@ class MailSearch implements IMailSearch {
 			$this->messageMapper->findByIds($account->getUserId(),
 				$this->getIdsLocally($account, $mailbox, $query, $sortOrder, $limit),
 				$sortOrder,
-			)
+			),
+			true,
+			$userId
 		);
 	}
 
 	/**
-	 * @param IUser $user
-	 * @param string|null $filter
-	 * @param int|null $cursor
+	 * Find messages across all mailboxes for a user
 	 *
 	 * @return Message[]
 	 *
-	 * @throws ClientException
 	 * @throws ServiceException
 	 */
-	public function findMessagesGlobally(IUser $user,
-		?string $filter,
-		?int $cursor,
+	#[\Override]
+	public function findMessagesGlobally(
+		IUser $user,
+		SearchQuery $query,
 		?int $limit): array {
-		$query = $this->filterStringParser->parse($filter);
-		if ($cursor !== null) {
-			$query->setCursor($cursor);
-		}
-
 		return $this->messageMapper->findByIds($user->getUID(),
 			$this->getIdsGlobally($user, $query, $limit),
 			'DESC'

@@ -11,17 +11,18 @@
 		@update:showDetails="hideMessage">
 		<template #list>
 			<div :class="{ list__wrapper: !showThread || !isMobile }">
-				<SearchMessages v-if="!showThread || !isMobile"
-					:mailbox="mailbox"
-					:account-id="account.accountId"
-					@search-changed="onUpdateSearchQuery" />
+				<div v-if="!showThread || !isMobile" class="sticky-header">
+					<SearchMessages :mailbox="mailbox"
+						:account-id="account.accountId"
+						@search-changed="onUpdateSearchQuery" />
+				</div>
 				<AppContentList v-infinite-scroll="onScroll"
 					v-shortkey.once="shortkeys"
 					class="envelope-list"
 					infinite-scroll-immediate-check="false"
 					:show-details="showThread"
 					:infinite-scroll-disabled="false"
-					:infinite-scroll-distance="10"
+					:infinite-scroll-distance="300"
 					role="heading"
 					:aria-level="2"
 					@shortkey.native="onShortcut">
@@ -116,7 +117,7 @@ import mitt from 'mitt'
 import addressParser from 'address-rfc2822'
 
 import infiniteScroll from '../directives/infinite-scroll.js'
-import IconInfo from 'vue-material-design-icons/Information.vue'
+import IconInfo from 'vue-material-design-icons/InformationOutline.vue'
 import logger from '../logger.js'
 import Mailbox from './Mailbox.vue'
 import SearchMessages from './SearchMessages.vue'
@@ -133,6 +134,8 @@ import {
 	priorityOtherQuery,
 } from '../util/priorityInbox.js'
 import { detect, html } from '../util/text.js'
+import useMainStore from '../store/mainStore.js'
+import { mapStores } from 'pinia'
 
 const START_MAILBOX_DEBOUNCE = 5 * 1000
 
@@ -187,8 +190,9 @@ export default {
 		}
 	},
 	computed: {
+		...mapStores(useMainStore),
 		layoutMode() {
-			return this.$store.getters.getPreference('layout-mode', 'vertical-split')
+			return this.mainStore.getPreference('layout-mode', 'vertical-split')
 		},
 		horizontalListMinWidth() {
 			return this.layoutMode === 'horizontal-split' ? 40 : 30
@@ -197,19 +201,19 @@ export default {
 			return this.layoutMode === 'horizontal-split' ? 60 : 50
 		},
 		unifiedAccount() {
-			return this.$store.getters.getAccount(UNIFIED_ACCOUNT_ID)
+			return this.mainStore.getAccount(UNIFIED_ACCOUNT_ID)
 		},
 		unifiedInbox() {
-			return this.$store.getters.getMailbox(UNIFIED_INBOX_ID)
+			return this.mainStore.getMailbox(UNIFIED_INBOX_ID)
 		},
 		followUpMailbox() {
-			return this.$store.getters.getMailbox(FOLLOW_UP_MAILBOX_ID)
+			return this.mainStore.getMailbox(FOLLOW_UP_MAILBOX_ID)
 		},
 		/**
 		 * @return {string|undefined}
 		 */
 		followUpQuery() {
-			const tag = this.$store.getters.getFollowUpTag
+			const tag = this.mainStore.getFollowUpTag
 			if (!tag) {
 				logger.warn('No follow-up tag available')
 				return undefined
@@ -222,34 +226,28 @@ export default {
 		},
 		hasEnvelopes() {
 			if (this.mailbox.isPriorityInbox) {
-				return this.$store.getters.getEnvelopes(this.mailbox.databaseId, this.appendToSearch(priorityImportantQuery)).length > 0
-					|| this.$store.getters.getEnvelopes(this.mailbox.databaseId, this.appendToSearch(priorityOtherQuery)).length > 0
+				return this.mainStore.getEnvelopes(this.mailbox.databaseId, this.appendToSearch(priorityImportantQuery)).length > 0
+					|| this.mainStore.getEnvelopes(this.mailbox.databaseId, this.appendToSearch(priorityOtherQuery)).length > 0
 			}
-			return this.$store.getters.getEnvelopes(this.mailbox.databaseId, this.searchQuery).length > 0
+			return this.mainStore.getEnvelopes(this.mailbox.databaseId, this.searchQuery).length > 0
 		},
 		hasImportantEnvelopes() {
-			return this.$store.getters.getEnvelopes(this.unifiedInbox.databaseId, this.appendToSearch(priorityImportantQuery)).length > 0
+			return this.mainStore.getEnvelopes(this.unifiedInbox.databaseId, this.appendToSearch(priorityImportantQuery)).length > 0
 		},
 		/**
 		 * @return {boolean}
 		 */
 		hasFollowUpEnvelopes() {
-			// TODO: remove this version check once we only support >= 27.1
-			const [major, minor] = OC.config.version.split('.').map(parseInt)
-			if (major < 27 || (major === 27 && minor < 1)) {
-				return false
-			}
-
 			if (!this.followUpQuery) {
 				return false
 			}
 
-			return this.$store.getters
+			return this.mainStore
 				.getEnvelopes(FOLLOW_UP_MAILBOX_ID, this.followUpQuery)
 				.length > 0
 		},
 		importantMessagesInitialPageSize() {
-			if (window.innerHeight > 900) {
+			if (window.innerHeight > 1024) {
 				return 7
 			}
 			if (window.innerHeight > 750) {
@@ -264,8 +262,7 @@ export default {
 			return 5
 		},
 		showThread() {
-			return (this.mailbox.isPriorityInbox === true || this.hasEnvelopes)
-				&& this.$route.name === 'message'
+			return this.$route.name === 'message'
 				&& this.$route.params.threadId !== 'mailto'
 		},
 		query() {
@@ -317,9 +314,9 @@ export default {
 	},
 	methods: {
 		async fetchEnvelopes() {
-			const existingEnvelopes = this.$store.getters.getEnvelopes(this.mailbox.databaseId, this.searchQuery || '')
+			const existingEnvelopes = this.mainStore.getEnvelopes(this.mailbox.databaseId, this.searchQuery || '')
 			if (!existingEnvelopes.length) {
-				await this.$store.dispatch('fetchEnvelopes', {
+				await this.mainStore.fetchEnvelopes({
 					mailboxId: this.mailbox.databaseId,
 					query: this.searchQuery || '',
 				})
@@ -328,7 +325,7 @@ export default {
 		async onPriorityMailboxOpened() {
 			logger.debug('Priority inbox was opened')
 
-			await this.$store.dispatch('checkFollowUpReminders', { query: this.followUpQuery })
+			await this.mainStore.checkFollowUpReminders({ query: this.followUpQuery })
 		},
 		deleteMessage(id) {
 			this.bus.emit('delete', id)
@@ -363,11 +360,12 @@ export default {
 				if (this.$route.params.accountId !== 0 && this.$route.params.accountId !== '0') {
 					accountId = parseInt(this.$route.params.accountId, 10)
 				}
-				this.$store.dispatch('startComposerSession', {
+				this.mainStore.startComposerSession({
 					data: {
 						accountId,
 						to: this.stringToRecipients(this.$route.query.to),
 						cc: this.stringToRecipients(this.$route.query.cc),
+						bcc: this.stringToRecipients(this.$route.query.bcc),
 						subject: this.$route.query.subject || '',
 						body: this.$route.query.body ? detect(this.$route.query.body) : html(''),
 					},
@@ -375,18 +373,17 @@ export default {
 			}
 		},
 		async saveStartMailbox() {
-			const currentStartMailboxId = this.$store.getters.getPreference('start-mailbox-id')
+			const currentStartMailboxId = this.mainStore.getPreference('start-mailbox-id')
 			if (currentStartMailboxId === this.mailbox.databaseId) {
 				return
 			}
 			logger.debug(`Saving mailbox ${this.mailbox.databaseId} as start mailbox`)
 
 			try {
-				await this.$store
-					.dispatch('savePreference', {
-						key: 'start-mailbox-id',
-						value: this.mailbox.databaseId,
-					})
+				await this.mainStore.savePreference({
+					key: 'start-mailbox-id',
+					value: this.mailbox.databaseId,
+				})
 			} catch (error) {
 				// Catch and log. This is not critical.
 				logger.warn('Could not update start mailbox id', {
@@ -432,7 +429,18 @@ export default {
 		margin: 0 !important;
 	}
 }
-
+:deep(.app-content-list) {
+	flex: 1 1 auto;
+	overflow: hidden;
+	height: 100% !important;
+	min-height: 0;
+}
+:deep(.app-content-wrapper) {
+	display: flex;
+	flex-direction: column;
+	height: 100%;
+	overflow: hidden;
+}
 .v-popover > .trigger > * {
 	z-index: 1;
 }
@@ -464,11 +472,10 @@ export default {
 		background-color: var(--color-background-dark);
 	}
 }
-:deep(.app-content-wrapper) {
-	overflow: auto;
-}
 .envelope-list {
+	flex: 1 1 auto;
 	overflow-y: auto;
+	min-height: 0;
 }
 .information-icon {
 	opacity: .7;
@@ -480,9 +487,10 @@ export default {
 }
 .list__wrapper {
 	display: flex;
-	flex: 1 0 0;
+	flex: 1 1 auto;
 	flex-direction: column;
 	height: 100%;
+	overflow: hidden;
 }
 :deep(.app-details-toggle) {
 	opacity: 1;
@@ -490,5 +498,12 @@ export default {
  // temporary fix
 :deep(.app-content-list) {
 	min-height: 0;
+	position: absolute;
+	overflow: scroll;
+	width: 100% !important;
+	top: 52px;
+}
+:deep(.app-content-wrapper.app-content-wrapper--no-split.app-content-wrapper--show-details) {
+	overflow-y: scroll !important;
 }
 </style>

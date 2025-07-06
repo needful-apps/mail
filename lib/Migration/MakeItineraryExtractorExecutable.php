@@ -27,10 +27,11 @@ class MakeItineraryExtractorExecutable implements IRepairStep {
 
 	public function __construct(LoggerInterface $logger,
 		?string $file = null) {
-		$this->file = $file ?? __DIR__ . '/../../vendor/christophwurst/kitinerary-bin/bin/kitinerary-extractor';
+		$this->file = $file ?? (__DIR__ . '/../../vendor/nextcloud/kitinerary-bin/bin/kitinerary-extractor');
 		$this->logger = $logger;
 	}
 
+	#[\Override]
 	public function getName() {
 		return 'Make Mail itinerary extractor executable';
 	}
@@ -38,6 +39,7 @@ class MakeItineraryExtractorExecutable implements IRepairStep {
 	/**
 	 * @return void
 	 */
+	#[\Override]
 	public function run(IOutput $output) {
 		if (!is_file($this->file)) {
 			$this->logger->warning('itinerary file doesn\'t exist');

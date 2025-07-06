@@ -41,6 +41,7 @@ class AddressCollectionListener implements IEventListener {
 		$this->preferences = $preferences;
 	}
 
+	#[\Override]
 	public function handle(Event $event): void {
 		if (!($event instanceof MessageSentEvent)) {
 			return;

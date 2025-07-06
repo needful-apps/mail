@@ -22,7 +22,7 @@
 
 				<h6>{{ t('mail', 'Account settings') }}</h6>
 				<p>{{ t('mail', 'Settings for:') }}</p>
-				<li v-for="account in accounts" :key="account.id">
+				<li v-for="account in getAccounts" :key="account.id">
 					<NcButton v-if="account && account.emailAddress"
 						class="app-settings-button"
 						type="secondary"
@@ -71,6 +71,24 @@
 					</template>
 					{{ t('mail', 'Horizontal split') }}
 				</NcCheckboxRadioSwitch>
+
+				<h6>{{ t('mail', 'Message View Mode') }}</h6>
+				<div class="sorting">
+					<NcCheckboxRadioSwitch type="radio"
+						name="message_view_mode_radio"
+						value="threaded"
+						:checked="layoutMessageView"
+						@update:checked="setLayoutMessageView('threaded')">
+						{{ t('mail', 'Show all messages in thread') }}
+					</NcCheckboxRadioSwitch>
+					<NcCheckboxRadioSwitch type="radio"
+						name="message_view_mode_radio"
+						value="singleton"
+						:checked="layoutMessageView"
+						@update:checked="setLayoutMessageView('singleton')">
+						{{ t('mail', 'Show only the selected message') }}
+					</NcCheckboxRadioSwitch>
+				</div>
 
 				<h6>{{ t('mail', 'Sorting') }}</h6>
 				<div class="sorting">
@@ -235,7 +253,7 @@
 						@change="onToggleAutoTagging">
 					<label for="auto-tagging-toggle">{{ autoTaggingText }}</label>
 				</p>
-				<p v-if="isFollowUpFeatureAvailable" class="app-settings">
+				<p v-if="followUpFeatureAvailable" class="app-settings">
 					<input id="follow-up-reminder-toggle"
 						class="checkbox"
 						type="checkbox"
@@ -244,7 +262,9 @@
 					<label for="follow-up-reminder-toggle">{{ followUpReminderText }}</label>
 				</p>
 			</NcAppSettingsSection>
-
+			<NcAppSettingsSection id="about-settings" :name="t('mail', 'About')">
+				<p>{{ t('mail', 'This application includes CKEditor, an open-source editor. Copyright © CKEditor contributors. Licensed under GPLv2.') }}</p>
+			</NcAppSettingsSection>
 			<NcAppSettingsSection id="keyboard-shortcut-settings" :name="t('mail', 'Keyboard shortcuts')">
 				<dl>
 					<div>
@@ -303,8 +323,8 @@ import CompactMode from 'vue-material-design-icons/ReorderHorizontal.vue'
 import { NcAppSettingsSection, NcAppSettingsDialog, NcButton, NcLoadingIcon as IconLoading, NcCheckboxRadioSwitch } from '@nextcloud/vue'
 
 import IconAdd from 'vue-material-design-icons/Plus.vue'
-import IconEmail from 'vue-material-design-icons/Email.vue'
-import IconLock from 'vue-material-design-icons/Lock.vue'
+import IconEmail from 'vue-material-design-icons/EmailOutline.vue'
+import IconLock from 'vue-material-design-icons/LockOutline.vue'
 import VerticalSplit from 'vue-material-design-icons/FormatColumns.vue'
 import HorizontalSplit from 'vue-material-design-icons/ViewSplitHorizontal.vue'
 import Logger from '../logger.js'
@@ -312,7 +332,8 @@ import SmimeCertificateModal from './smime/SmimeCertificateModal.vue'
 import TrustedSenders from './TrustedSenders.vue'
 import InternalAddress from './InternalAddress.vue'
 import isMobile from '@nextcloud/vue/dist/Mixins/isMobile.js'
-import { mapGetters } from 'vuex'
+import useMainStore from '../store/mainStore.js'
+import { mapStores, mapState } from 'pinia'
 
 export default {
 	name: 'AppSettingsMenu',
@@ -366,38 +387,37 @@ export default {
 		}
 	},
 	computed: {
-		...mapGetters([
-			'isFollowUpFeatureAvailable',
-		]),
-		...mapGetters({
-			accounts: 'accounts',
-		}),
+		...mapStores(useMainStore),
+		...mapState(useMainStore, ['getAccounts', 'followUpFeatureAvailable']),
 		searchPriorityBody() {
-			return this.$store.getters.getPreference('search-priority-body', 'false') === 'true'
+			return this.mainStore.getPreference('search-priority-body', 'false') === 'true'
 		},
 		useBottomReplies() {
-			return this.$store.getters.getPreference('reply-mode', 'top') === 'bottom'
+			return this.mainStore.getPreference('reply-mode', 'top') === 'bottom'
 		},
 		useExternalAvatars() {
-			return this.$store.getters.getPreference('external-avatars', 'true') === 'true'
+			return this.mainStore.getPreference('external-avatars', 'true') === 'true'
 		},
 		useDataCollection() {
-			return this.$store.getters.getPreference('collect-data', 'true') === 'true'
+			return this.mainStore.getPreference('collect-data', 'true') === 'true'
 		},
 		useAutoTagging() {
-			return this.$store.getters.getPreference('tag-classified-messages', 'true') === 'true'
+			return this.mainStore.getPreference('tag-classified-messages', 'true') === 'true'
 		},
 		useInternalAddresses() {
-			return this.$store.getters.getPreference('internal-addresses', 'false') === 'true'
+			return this.mainStore.getPreference('internal-addresses', 'false') === 'true'
 		},
 		useFollowUpReminders() {
-			return this.$store.getters.getPreference('follow-up-reminders', 'true') === 'true'
+			return this.mainStore.getPreference('follow-up-reminders', 'true') === 'true'
 		},
 		allowNewMailAccounts() {
-			return this.$store.getters.getPreference('allow-new-accounts', true)
+			return this.mainStore.getPreference('allow-new-accounts', true)
 		},
 		layoutMode() {
-			return this.$store.getters.getPreference('layout-mode', 'vertical-split')
+			return this.mainStore.getPreference('layout-mode', 'vertical-split')
+		},
+		layoutMessageView() {
+			return this.mainStore.getPreference('layout-message-view')
 		},
 	},
 	watch: {
@@ -413,7 +433,7 @@ export default {
 		},
 	},
 	mounted() {
-		this.sortOrder = this.$store.getters.getPreference('sort-order', 'newest')
+		this.sortOrder = this.mainStore.getPreference('sort-order', 'newest')
 		document.addEventListener.call(window, 'mailvelope', () => this.checkMailvelope())
 	},
 	updated() {
@@ -424,7 +444,7 @@ export default {
 			this.showAccountSettings = false
 		},
 		openAccountSettings(accountId) {
-			this.$store.commit('showSettingsForAccount', accountId)
+			this.mainStore.showSettingsForAccountMutation(accountId)
 			this.showSettings = false
 		},
 		checkMailvelope() {
@@ -432,9 +452,19 @@ export default {
 		},
 		async setLayout(layoutMode) {
 			try {
-				await this.$store.dispatch('savePreference', {
+				await this.mainStore.savePreference({
 					key: 'layout-mode',
 					value: layoutMode,
+				})
+			} catch (error) {
+				Logger.error('Could not save preferences', { error })
+			}
+		},
+		async setLayoutMessageView(value) {
+			try {
+				await this.mainStore.savePreference({
+					key: 'layout-message-view',
+					value,
 				})
 			} catch (error) {
 				Logger.error('Could not save preferences', { error })
@@ -446,11 +476,10 @@ export default {
 		onToggleButtonReplies(e) {
 			this.loadingReplySettings = true
 
-			this.$store
-				.dispatch('savePreference', {
-					key: 'reply-mode',
-					value: e.target.checked ? 'bottom' : 'top',
-				})
+			this.mainStore.savePreference({
+				key: 'reply-mode',
+				value: e.target.checked ? 'bottom' : 'top',
+			})
 				.catch((error) => Logger.error('could not save preferences', { error }))
 				.then(() => {
 					this.loadingReplySettings = false
@@ -459,11 +488,10 @@ export default {
 		onToggleExternalAvatars(e) {
 			this.loadingAvatarSettings = true
 
-			this.$store
-				.dispatch('savePreference', {
-					key: 'external-avatars',
-					value: e.target.checked ? 'true' : 'false',
-				})
+			this.mainStore.savePreference({
+				key: 'external-avatars',
+				value: e.target.checked ? 'true' : 'false',
+			})
 				.catch((error) => Logger.error('could not save preferences', { error }))
 				.then(() => {
 					this.loadingAvatarSettings = false
@@ -472,11 +500,10 @@ export default {
 		async onToggleSearchPriorityBody(e) {
 			this.loadingPrioritySettings = true
 			try {
-				await this.$store
-					.dispatch('savePreference', {
-						key: 'search-priority-body',
-						value: e.target.checked ? 'true' : 'false',
-					})
+				await this.mainStore.savePreference({
+					key: 'search-priority-body',
+					value: e.target.checked ? 'true' : 'false',
+				})
 			} catch (error) {
 				Logger.error('could not save preferences', { error })
 			} finally {
@@ -486,11 +513,10 @@ export default {
 		onToggleCollectData(e) {
 			this.loadingOptOutSettings = true
 
-			this.$store
-				.dispatch('savePreference', {
-					key: 'collect-data',
-					value: e.target.checked ? 'true' : 'false',
-				})
+			this.mainStore.savePreference({
+				key: 'collect-data',
+				value: e.target.checked ? 'true' : 'false',
+			})
 				.catch((error) => Logger.error('could not save preferences', { error }))
 				.then(() => {
 					this.loadingOptOutSettings = false
@@ -500,13 +526,11 @@ export default {
 			const previousValue = this.sortOrder
 			try {
 				this.sortOrder = e
-				await this.$store
-					.dispatch('savePreference', {
-						key: 'sort-order',
-						value: e,
-					})
-				this.$store.commit('removeAllEnvelopes')
-
+				await this.mainStore.savePreference({
+					key: 'sort-order',
+					value: e,
+				})
+				this.mainStore.removeAllEnvelopesMutation()
 			} catch (error) {
 				Logger.error('could not save preferences', { error })
 				this.sortOrder = previousValue
@@ -517,11 +541,10 @@ export default {
 			this.toggleAutoTagging = true
 
 			try {
-				await this.$store
-					.dispatch('savePreference', {
-						key: 'tag-classified-messages',
-						value: e.target.checked ? 'true' : 'false',
-					})
+				await this.mainStore.savePreference({
+					key: 'tag-classified-messages',
+					value: e.target.checked ? 'true' : 'false',
+				})
 			} catch (error) {
 				Logger.error('could not save preferences', { error })
 
@@ -532,7 +555,7 @@ export default {
 		},
 		async onToggleFollowUpReminders(e) {
 			try {
-				await this.$store.dispatch('savePreference', {
+				await this.mainStore.savePreference({
 					key: 'follow-up-reminders',
 					value: e.target.checked ? 'true' : 'false',
 				})
@@ -543,7 +566,7 @@ export default {
 		},
 		async onToggleInternalAddress(e) {
 			try {
-				await this.$store.dispatch('savePreference', {
+				await this.mainStore.savePreference({
 					key: 'internal-addresses',
 					value: e.target.checked ? 'true' : 'false',
 				})
@@ -577,22 +600,22 @@ export default {
 p.app-settings span.loading-icon {
 	display: inline-block;
 	vertical-align: middle;
-	padding: 5px 0;
+	padding: var(--default-grid-baseline) 0;
 }
 p.app-settings {
-	padding: 10px 0;
+	padding: calc(var(--default-grid-baseline) * 2) 0;
 }
 .app-settings-button {
 	display: inline-flex;
 	background-position: 10px center;
 	text-align: left;
-	margin-top: 6px;
+	margin-top: calc(var(--default-grid-baseline) * 2);
 }
 .app-settings-button.button.primary.new-button {
 	color: var(--color-primary-element-text);
 	//this style will be removed after we migrate also the  'add mail account' to material design
 	padding-left: 34px;
-	gap: 4px;
+	gap: var(--default-grid-baseline);
 	width: fit-content;
 }
 .app-settings-link {
@@ -606,13 +629,13 @@ p.app-settings {
 	justify-content: flex-start;
 }
 .mailvelope-section {
-	padding-top: 15px;
+	padding-top: calc(var(--default-grid-baseline) * 4);
 
 	a.button {
 		display: flex;
 		align-items: center;
 		line-height: normal;
-		min-height: 44px;
+		min-height: calc(var(--default-grid-baseline) * 11);
 		font-size: unset;
 
 		&:focus-visible,
@@ -623,13 +646,13 @@ p.app-settings {
 }
 .material-design-icon {
 	&.lock-icon {
-		margin-right: 10px;
+		margin-right: calc(var(--default-grid-baseline) * 2);
 	}
 
 }
 .section-title {
-	margin-top: 20px;
-	margin-bottom: 10px;
+	margin-top: calc(var(--default-grid-baseline) * 5);
+	margin-bottom: calc(var(--default-grid-baseline) * 2);
 }
 .sorting {
 	display: flex;
@@ -642,8 +665,8 @@ p.app-settings {
 	width: 100%;
 }
 .settings-hint {
-	margin-top: -12px;
-	margin-bottom: 6px;
+	margin-top: calc(var(--default-grid-baseline) * -3);
+	margin-bottom: calc(var(--default-grid-baseline) * 2);
 	color: var(--color-text-maxcontrast);
 }
 .app-settings-section {

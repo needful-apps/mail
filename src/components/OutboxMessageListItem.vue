@@ -10,7 +10,10 @@
 		:details="details"
 		@click="openModal">
 		<template #icon>
-			<Avatar :display-name="avatarDisplayName" :email="avatarEmail" />
+			<Avatar :display-name="avatarDisplayName"
+				:email="avatarEmail"
+				:fetch-avatar="false"
+				:avatar="message.avatar" />
 		</template>
 		<template #subname>
 			{{ subjectForSubtitle }}
@@ -48,15 +51,14 @@
 <script>
 import { NcListItem as ListItem, NcActionButton as ActionButton } from '@nextcloud/vue'
 import Avatar from './Avatar.vue'
-import IconDelete from 'vue-material-design-icons/Delete.vue'
+import IconDelete from 'vue-material-design-icons/DeleteOutline.vue'
 import { getLanguage, translate as t } from '@nextcloud/l10n'
 import OutboxAvatarMixin from '../mixins/OutboxAvatarMixin.js'
 import moment from '@nextcloud/moment'
 import logger from '../logger.js'
 import { showError, showSuccess } from '@nextcloud/dialogs'
 import { matchError } from '../errors/match.js'
-import { html, plain } from '../util/text.js'
-import Send from 'vue-material-design-icons/Send.vue'
+import Send from 'vue-material-design-icons/SendOutline.vue'
 import Copy from 'vue-material-design-icons/ContentCopy.vue'
 import {
 	STATUS_RAW,
@@ -65,6 +67,7 @@ import {
 	UNDO_DELAY,
 } from '../store/constants.js'
 import useOutboxStore from '../store/outboxStore.js'
+import useMainStore from '../store/mainStore.js'
 import { mapStores } from 'pinia'
 
 export default {
@@ -87,7 +90,7 @@ export default {
 		},
 	},
 	computed: {
-		...mapStores(useOutboxStore),
+		...mapStores(useOutboxStore, useMainStore),
 		selected() {
 			return this.$route.params.messageId === this.message.id
 		},
@@ -170,15 +173,9 @@ export default {
 			if (this.message.status === STATUS_IMAP_SENT_MAILBOX_FAIL) {
 				return
 			}
-			if (this.message.editorBody === null) {
-				return
-			}
-			await this.$store.dispatch('startComposerSession', {
+			await this.mainStore.startComposerSession({
 				type: 'outbox',
-				data: {
-					...this.message,
-					body: this.message.isHtml ? html(this.message.body) : plain(this.message.body),
-				},
+				data: { ...this.message },
 			})
 		},
 	},

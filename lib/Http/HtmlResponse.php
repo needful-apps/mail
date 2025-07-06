@@ -66,11 +66,16 @@ class HtmlResponse extends Response {
 	 *
 	 * @return string message html content
 	 */
+	#[\Override]
 	public function render(): string {
 		if ($this->plain) {
 			return $this->content;
 		}
 
+<<<<<<< HEAD
 		return '<!DOCTYPE html><html><head><meta http-equiv="Content-Type" content="text/html; charset=utf-8" /><script nonce="' . $this->nonce . '" src="' . $this->scriptUrl . '"></script></head><body>' . $this->content . '<div data-iframe-height></div></body></html>';
+=======
+		return '<!DOCTYPE html><html><head><meta http-equiv="Content-Type" content="text/html; charset=utf-8" /><script nonce="' . $this->nonce . '" src="' . $this->scriptUrl . '"></script></head><body>' . $this->content . '<div data-iframe-size></div></body></html>';
+>>>>>>> 5d13aacd343883b2c7ace01db7280a0664c0a6e4
 	}
 }

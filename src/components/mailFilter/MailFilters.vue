@@ -52,8 +52,9 @@ import UpdateModal from './UpdateModal.vue'
 import { randomId } from '../../util/randomId.js'
 import logger from '../../logger.js'
 import { mapStores } from 'pinia'
-import useMailFilterStore from '../../store/mailFilterStore.js'
-import DeleteIcon from 'vue-material-design-icons/Delete.vue'
+import useMailFilterStore from '../../store/mailFilterStore.ts'
+import useMainStore from '../../store/mainStore.js'
+import DeleteIcon from 'vue-material-design-icons/DeleteOutline.vue'
 import DeleteModal from './DeleteModal.vue'
 import { showError, showSuccess } from '@nextcloud/dialogs'
 
@@ -85,12 +86,12 @@ export default {
 		}
 	},
 	computed: {
-		...mapStores(useMailFilterStore),
+		...mapStores(useMailFilterStore, useMainStore),
 		filters() {
 			return this.mailFilterStore.filters
 		},
 		scriptData() {
-			return this.$store.getters.getActiveSieveScript(this.account.id)
+			return this.mainStore.getActiveSieveScript(this.account.id)
 		},
 	},
 	watch: {
@@ -136,24 +137,14 @@ export default {
 		},
 		async updateFilter(filter) {
 			this.loading = true
-			this.mailFilterStore.$patch((state) => {
-				const index = state.filters.findIndex((item) => item.id === filter.id)
-				logger.debug('update filter', { filter, index })
 
-				if (index === -1) {
-					state.filters.push(filter)
-				} else {
-					state.filters[index] = filter
-				}
-
-				state.filters.sort((a, b) => a.priority - b.priority)
-			})
+			this.mailFilterStore.update(filter)
 
 			try {
-				await this.mailFilterStore.update(this.account.id).then(() => {
+				await this.mailFilterStore.store(this.account.id).then(() => {
 					showSuccess(t('mail', 'Filter saved'))
 				})
-				await this.$store.dispatch('fetchActiveSieveScript', { accountId: this.account.id })
+				await this.mainStore.fetchActiveSieveScript({ accountId: this.account.id })
 			} catch (e) {
 				logger.error(e)
 				showError(t('mail', 'Could not save filter'))
@@ -164,17 +155,10 @@ export default {
 		async deleteFilter(filter) {
 			this.loading = true
 
-			this.mailFilterStore.$patch((state) => {
-				const index = state.filters.findIndex((item) => item.id === filter.id)
-				logger.debug('delete filter', { filter, index })
-
-				if (index !== -1) {
-					state.filters.splice(index, 1)
-				}
-			})
+			this.mailFilterStore.delete(filter)
 
 			try {
-				await this.mailFilterStore.update(this.account.id).then(() => {
+				await this.mailFilterStore.store(this.account.id).then(() => {
 					showSuccess(t('mail', 'Filter deleted'))
 				})
 			} catch (e) {
@@ -184,7 +168,7 @@ export default {
 				this.loading = false
 			}
 
-			await this.$store.dispatch('fetchActiveSieveScript', { accountId: this.account.id })
+			await this.mainStore.fetchActiveSieveScript({ accountId: this.account.id })
 		},
 		closeModal() {
 			this.currentFilter = null

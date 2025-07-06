@@ -18,7 +18,7 @@
 			<span class="attachment-size">{{ humanReadable(size) }}</span>
 		</div>
 		<FilePicker v-if="isFilePickerOpen"
-			:title="t('mail', 'Choose a folder to store the attachment in')"
+			:name="t('mail', 'Choose a folder to store the attachment in')"
 			:buttons="saveAttachementButtons"
 			:allow-pick-directory="true"
 			:multiselect="false"
@@ -82,8 +82,8 @@ import { NcActions as Actions, NcActionButton as ActionButton, NcLoadingIcon as 
 
 import IconAdd from 'vue-material-design-icons/Plus.vue'
 import IconArrow from 'vue-material-design-icons/ArrowLeft.vue'
-import IconSave from 'vue-material-design-icons/Folder.vue'
-import IconDownload from 'vue-material-design-icons/Download.vue'
+import IconSave from 'vue-material-design-icons/FolderOutline.vue'
+import IconDownload from 'vue-material-design-icons/DownloadOutline.vue'
 import Logger from '../logger.js'
 
 import { downloadAttachment, saveAttachmentToFiles } from '../service/AttachmentService.js'
@@ -186,13 +186,13 @@ export default {
 		humanReadable(size) {
 			return formatFileSize(size)
 		},
-		saveToCloud(dest) {
+		async saveToCloud(dest) {
 			const path = dest[0].path
 			this.savingToCloud = true
 			const id = this.$route.params.threadId
 
 			try {
-				saveAttachmentToFiles(id, this.id, path)
+				await saveAttachmentToFiles(id, this.id, path)
 				Logger.info('saved')
 				showSuccess(t('mail', 'Attachment saved to Files'))
 			} catch (e) {

@@ -17,7 +17,6 @@ tests/clover*.xml
 node_modules/
 
 /js
-/css
 
 # packaged app
 build/artifacts
@@ -46,3 +45,8 @@ tests/.phpunit.result.cache
 
 # PhpStorm
 .idea
+
+# Playwright
+/playwright
+/playwright-report
+/test-results

@@ -22,7 +22,6 @@ use OCA\Mail\IMAP\IMAPClientFactory;
 use OCA\Mail\Send\Chain;
 use OCA\Mail\Service\AccountService;
 use OCA\Mail\Service\Attachment\AttachmentService;
-use OCA\Mail\Service\MailTransmission;
 use OCA\Mail\Service\OutboxService;
 use OCP\AppFramework\Db\DoesNotExistException;
 use OCP\AppFramework\Utility\ITimeFactory;
@@ -31,9 +30,6 @@ use PHPUnit\Framework\MockObject\MockObject;
 use Psr\Log\LoggerInterface;
 
 class OutboxServiceTest extends TestCase {
-	/** @var MailTransmission|MockObject */
-	private $transmission;
-
 	/** @var LocalMessageMapper|MockObject */
 	private $mapper;
 
@@ -68,7 +64,6 @@ class OutboxServiceTest extends TestCase {
 	protected function setUp(): void {
 		parent::setUp();
 
-		$this->transmission = $this->createMock(MailTransmission::class);
 		$this->mapper = $this->createMock(LocalMessageMapper::class);
 		$this->attachmentService = $this->createMock(AttachmentService::class);
 		$this->clientFactory = $this->createMock(IMAPClientFactory::class);
@@ -78,7 +73,6 @@ class OutboxServiceTest extends TestCase {
 		$this->logger = $this->createMock(LoggerInterface::class);
 		$this->chain = $this->createMock(Chain::class);
 		$this->outboxService = new OutboxService(
-			$this->transmission,
 			$this->mapper,
 			$this->attachmentService,
 			$this->createMock(EventDispatcher::class),
@@ -146,7 +140,7 @@ class OutboxServiceTest extends TestCase {
 		$message->setAccountId(1);
 		$message->setSendAt($this->time->getTime());
 		$message->setSubject('Test');
-		$message->setBody('Test Test Test');
+		$message->setBodyHtml('<p>message</p>');
 		$message->setHtml(true);
 		$message->setInReplyToMessageId('abcd');
 
@@ -174,7 +168,7 @@ class OutboxServiceTest extends TestCase {
 		$message->setAccountId(1);
 		$message->setSendAt($this->time->getTime());
 		$message->setSubject('Test');
-		$message->setBody('Test Test Test');
+		$message->setBodyHtml('<p>message</p>');
 		$message->setHtml(true);
 		$message->setInReplyToMessageId('abcd');
 
@@ -193,7 +187,7 @@ class OutboxServiceTest extends TestCase {
 		$message->setAccountId(1);
 		$message->setSendAt($this->time->getTime());
 		$message->setSubject('Test');
-		$message->setBody('Test Test Test');
+		$message->setBodyHtml('<p>message</p>');
 		$message->setHtml(true);
 		$message->setInReplyToMessageId('abcd');
 		$to = [
@@ -243,7 +237,7 @@ class OutboxServiceTest extends TestCase {
 		$message->setAccountId(1);
 		$message->setSendAt($this->time->getTime());
 		$message->setSubject('Test');
-		$message->setBody('Test Test Test');
+		$message->setBodyHtml('<p>message</p>');
 		$message->setHtml(true);
 		$message->setInReplyToMessageId('abcd');
 		$to = [
@@ -289,7 +283,7 @@ class OutboxServiceTest extends TestCase {
 		$message->setAccountId(1);
 		$message->setSendAt($this->time->getTime());
 		$message->setSubject('Test');
-		$message->setBody('Test Test Test');
+		$message->setBodyHtml('<p>message</p>');
 		$message->setHtml(true);
 		$message->setInReplyToMessageId('abcd');
 		$old = Recipient::fromParams([
@@ -346,7 +340,7 @@ class OutboxServiceTest extends TestCase {
 		$message->setAccountId(1);
 		$message->setSendAt($this->time->getTime());
 		$message->setSubject('Test');
-		$message->setBody('Test Test Test');
+		$message->setBodyHtml('<p>message</p>');
 		$message->setHtml(true);
 		$message->setInReplyToMessageId('abcd');
 		$old = Recipient::fromParams([
@@ -397,7 +391,7 @@ class OutboxServiceTest extends TestCase {
 		$message->setAccountId(1);
 		$message->setSendAt($this->time->getTime());
 		$message->setSubject('Test');
-		$message->setBody('Test Test Test');
+		$message->setBodyHtml('<p>message</p>');
 		$message->setHtml(true);
 		$message->setInReplyToMessageId('laskdjhsakjh33233928@startdewvalley.com');
 		$to = [
@@ -514,7 +508,7 @@ class OutboxServiceTest extends TestCase {
 		$sentAt = $this->time->getTime();
 		$message->setSendAt($sentAt);
 		$message->setSubject('Test');
-		$message->setBody('Test Test Test');
+		$message->setBodyHtml('<p>message</p>');
 		$message->setHtml(true);
 		$message->setInReplyToMessageId('abcd');
 		$message->setType(LocalMessage::TYPE_DRAFT);

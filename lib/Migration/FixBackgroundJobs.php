@@ -13,7 +13,6 @@ use OCA\Mail\BackgroundJob\QuotaJob;
 use OCA\Mail\BackgroundJob\RepairSyncJob;
 use OCA\Mail\BackgroundJob\SyncJob;
 use OCA\Mail\BackgroundJob\TrainImportanceClassifierJob;
-use OCA\Mail\Db\MailAccount;
 use OCA\Mail\Db\MailAccountMapper;
 use OCP\BackgroundJob\IJobList;
 use OCP\Migration\IOutput;
@@ -30,6 +29,7 @@ class FixBackgroundJobs implements IRepairStep {
 		$this->mapper = $mapper;
 	}
 
+	#[\Override]
 	public function getName(): string {
 		return 'Insert background jobs for all accounts';
 	}
@@ -37,8 +37,8 @@ class FixBackgroundJobs implements IRepairStep {
 	/**
 	 * @return void
 	 */
+	#[\Override]
 	public function run(IOutput $output) {
-		/** @var MailAccount[] $accounts */
 		$accounts = $this->mapper->getAllAccounts();
 
 		$output->startProgress(count($accounts));

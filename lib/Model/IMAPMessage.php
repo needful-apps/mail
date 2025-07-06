@@ -145,6 +145,7 @@ class IMAPMessage implements IMessage, JsonSerializable {
 	 * @deprecated  Seems unused
 	 * @return array
 	 */
+	#[\Override]
 	public function getFlags(): array {
 		return [
 			'seen' => in_array(Horde_Imap_Client::FLAG_SEEN, $this->flags),
@@ -167,6 +168,7 @@ class IMAPMessage implements IMessage, JsonSerializable {
 	 *
 	 * @return void
 	 */
+	#[\Override]
 	public function setFlags(array $flags) {
 		// TODO: implement
 		throw new Exception('Not implemented');
@@ -184,6 +186,7 @@ class IMAPMessage implements IMessage, JsonSerializable {
 		return $this->dispositionNotificationTo;
 	}
 
+	#[\Override]
 	public function getFrom(): AddressList {
 		return $this->from;
 	}
@@ -195,10 +198,12 @@ class IMAPMessage implements IMessage, JsonSerializable {
 	 *
 	 * @return void
 	 */
+	#[\Override]
 	public function setFrom(AddressList $from) {
 		throw new Exception('IMAP message is immutable');
 	}
 
+	#[\Override]
 	public function getTo(): AddressList {
 		return $this->to;
 	}
@@ -210,10 +215,12 @@ class IMAPMessage implements IMessage, JsonSerializable {
 	 *
 	 * @return void
 	 */
+	#[\Override]
 	public function setTo(AddressList $to) {
 		throw new Exception('IMAP message is immutable');
 	}
 
+	#[\Override]
 	public function getCC(): AddressList {
 		return $this->cc;
 	}
@@ -225,10 +232,12 @@ class IMAPMessage implements IMessage, JsonSerializable {
 	 *
 	 * @return void
 	 */
+	#[\Override]
 	public function setCC(AddressList $cc) {
 		throw new Exception('IMAP message is immutable');
 	}
 
+	#[\Override]
 	public function getBCC(): AddressList {
 		return $this->bcc;
 	}
@@ -240,14 +249,17 @@ class IMAPMessage implements IMessage, JsonSerializable {
 	 *
 	 * @return void
 	 */
+	#[\Override]
 	public function setBcc(AddressList $bcc) {
 		throw new Exception('IMAP message is immutable');
 	}
 
+	#[\Override]
 	public function getMessageId(): string {
 		return $this->realMessageId;
 	}
 
+	#[\Override]
 	public function getSubject(): string {
 		return $this->subject;
 	}
@@ -259,6 +271,7 @@ class IMAPMessage implements IMessage, JsonSerializable {
 	 *
 	 * @return void
 	 */
+	#[\Override]
 	public function setSubject(string $subject) {
 		throw new Exception('IMAP message is immutable');
 	}
@@ -296,6 +309,7 @@ class IMAPMessage implements IMessage, JsonSerializable {
 		return $data;
 	}
 
+	#[\Override]
 	#[ReturnTypeWillChange]
 	public function jsonSerialize() {
 		return [
@@ -348,6 +362,7 @@ class IMAPMessage implements IMessage, JsonSerializable {
 		return $this->plainMessage;
 	}
 
+	#[\Override]
 	public function getContent(): string {
 		return $this->getPlainBody();
 	}
@@ -355,6 +370,7 @@ class IMAPMessage implements IMessage, JsonSerializable {
 	/**
 	 * @return void
 	 */
+	#[\Override]
 	public function setContent(string $content) {
 		throw new Exception('IMAP message is immutable');
 	}
@@ -362,6 +378,7 @@ class IMAPMessage implements IMessage, JsonSerializable {
 	/**
 	 * @return Horde_Mime_Part[]
 	 */
+	#[\Override]
 	public function getAttachments(): array {
 		throw new Exception('not implemented');
 	}
@@ -372,6 +389,7 @@ class IMAPMessage implements IMessage, JsonSerializable {
 	 *
 	 * @return void
 	 */
+	#[\Override]
 	public function addRawAttachment(string $name, string $content): void {
 		throw new Exception('IMAP message is immutable');
 	}
@@ -382,6 +400,7 @@ class IMAPMessage implements IMessage, JsonSerializable {
 	 *
 	 * @return void
 	 */
+	#[\Override]
 	public function addEmbeddedMessageAttachment(string $name, string $content): void {
 		throw new Exception('IMAP message is immutable');
 	}
@@ -391,6 +410,7 @@ class IMAPMessage implements IMessage, JsonSerializable {
 	 *
 	 * @return void
 	 */
+	#[\Override]
 	public function addAttachmentFromFiles(File $file) {
 		throw new Exception('IMAP message is immutable');
 	}
@@ -401,6 +421,7 @@ class IMAPMessage implements IMessage, JsonSerializable {
 	 *
 	 * @return void
 	 */
+	#[\Override]
 	public function addLocalAttachment(LocalAttachment $attachment, ISimpleFile $file) {
 		throw new Exception('IMAP message is immutable');
 	}
@@ -408,6 +429,7 @@ class IMAPMessage implements IMessage, JsonSerializable {
 	/**
 	 * @return string|null
 	 */
+	#[\Override]
 	public function getInReplyTo() {
 		throw new Exception('not implemented');
 	}
@@ -417,6 +439,7 @@ class IMAPMessage implements IMessage, JsonSerializable {
 	 *
 	 * @return void
 	 */
+	#[\Override]
 	public function setInReplyTo(string $id) {
 		throw new Exception('not implemented');
 	}
@@ -424,6 +447,7 @@ class IMAPMessage implements IMessage, JsonSerializable {
 	/**
 	 * @return AddressList
 	 */
+	#[\Override]
 	public function getReplyTo(): AddressList {
 		return $this->replyTo;
 	}
@@ -435,6 +459,7 @@ class IMAPMessage implements IMessage, JsonSerializable {
 	 *
 	 * @return void
 	 */
+	#[\Override]
 	public function setReplyTo(AddressList $replyTo) {
 		throw new Exception('IMAP message is immutable');
 	}
@@ -498,8 +523,8 @@ class IMAPMessage implements IMessage, JsonSerializable {
 		$msg->setFlagSeen(in_array(Horde_Imap_Client::FLAG_SEEN, $flags, true));
 		$msg->setFlagForwarded(in_array(Horde_Imap_Client::FLAG_FORWARDED, $flags, true));
 		$msg->setFlagJunk(
-			in_array(Horde_Imap_Client::FLAG_JUNK, $flags, true) ||
-			in_array('junk', $flags, true)
+			in_array(Horde_Imap_Client::FLAG_JUNK, $flags, true)
+			|| in_array('junk', $flags, true)
 		);
 		$msg->setFlagNotjunk(in_array(Horde_Imap_Client::FLAG_NOTJUNK, $flags, true) || in_array('nonjunk', $flags, true));// While this is not a standard IMAP Flag, Thunderbird uses it to mark "not junk"
 		// @todo remove this as soon as possible @link https://github.com/nextcloud/mail/issues/25

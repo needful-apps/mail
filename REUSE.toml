@@ -78,7 +78,7 @@ SPDX-FileCopyrightText = "2021 Nextcloud GmbH and Nextcloud contributors"
 SPDX-License-Identifier = "AGPL-3.0-or-later"
 
 [[annotations]]
-path = ["vendor-bin/cs-fixer/composer.json", "vendor-bin/cs-fixer/composer.lock", "vendor-bin/mozart/composer.json", "vendor-bin/mozart/composer.lock", "vendor-bin/openapi/composer.*", "vendor-bin/phpunit/composer.json", "vendor-bin/phpunit/composer.lock", "vendor-bin/rector/composer.json", "vendor-bin/rector/composer.lock"]
+path = ["vendor-bin/*/composer.json", "vendor-bin/*/composer.lock"]
 precedence = "aggregate"
 SPDX-FileCopyrightText = "2021-2024 Nextcloud GmbH and Nextcloud contributors"
 SPDX-License-Identifier = "AGPL-3.0-or-later"
@@ -102,6 +102,21 @@ SPDX-FileCopyrightText = "2024 Nextcloud GmbH and Nextcloud contributors"
 SPDX-License-Identifier = "AGPL-3.0-or-later"
 
 [[annotations]]
+<<<<<<< HEAD
+=======
+path = ["tests/data/mail-filter/*"]
+precedence = "aggregate"
+SPDX-FileCopyrightText = "2024 Nextcloud GmbH and Nextcloud contributors"
+SPDX-License-Identifier = "AGPL-3.0-or-later"
+
+[[annotations]]
+path = ["tests/data/imip/*", "tests/data/html-with-signature.txt"]
+precedence = "aggregate"
+SPDX-FileCopyrightText = "2025 Nextcloud GmbH and Nextcloud contributors"
+SPDX-License-Identifier = "AGPL-3.0-or-later"
+
+[[annotations]]
+>>>>>>> 5d13aacd343883b2c7ace01db7280a0664c0a6e4
 path = ".github/CODEOWNERS"
 precedence = "aggregate"
 SPDX-FileCopyrightText = "2023 Nextcloud GmbH and Nextcloud contributors"

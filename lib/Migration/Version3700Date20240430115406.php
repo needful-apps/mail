@@ -29,8 +29,8 @@ class Version3700Date20240430115406 extends SimpleMigrationStep {
 	 * @param array $options
 	 * @return null|ISchemaWrapper
 	 */
+	#[\Override]
 	public function changeSchema(IOutput $output, Closure $schemaClosure, array $options): ?ISchemaWrapper {
-		/** @var ISchemaWrapper $schema */
 		$schema = $schemaClosure();
 
 		$localMessagesTable = $schema->getTable('mail_local_messages');
@@ -55,6 +55,7 @@ class Version3700Date20240430115406 extends SimpleMigrationStep {
 	 * @param Closure(): ISchemaWrapper $schemaClosure
 	 * @param array $options
 	 */
+	#[\Override]
 	public function postSchemaChange(IOutput $output, \Closure $schemaClosure, array $options) {
 		// Let's buffer this a bit
 		$aMinuteAgo = time() - 60;

@@ -124,6 +124,7 @@ class SettingsController extends Controller {
 		return new JSONResponse([]);
 	}
 
+<<<<<<< HEAD
 	/**
 	 * @NoAdminRequired
 	 */
@@ -138,4 +139,11 @@ class SettingsController extends Controller {
 		$this->config->setAppValue('mail', 'supabase_service_token', $token);
 		return new JSONResponse(['status' => 'success']);
 	}
+=======
+	public function setLayoutMessageView(string $value): JSONResponse {
+		$this->config->setAppValue('mail', 'layout_message_view', $value);
+		return new JSONResponse([]);
+	}
+
+>>>>>>> 5d13aacd343883b2c7ace01db7280a0664c0a6e4
 }

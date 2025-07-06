@@ -12,6 +12,7 @@ namespace OCA\Mail\Db;
 use Horde_Mail_Rfc822_Identification;
 use JsonSerializable;
 use OCA\Mail\AddressList;
+use OCA\Mail\Service\Avatar\Avatar;
 use OCP\AppFramework\Db\Entity;
 use ReturnTypeWillChange;
 use function in_array;
@@ -58,6 +59,8 @@ use function json_encode;
  * @method bool|null getFlagMdnsent()
  * @method void setPreviewText(?string $subject)
  * @method null|string getPreviewText()
+ * @method void setSummary(?string $summary)
+ * @method null|string getSummary()
  * @method void setUpdatedAt(int $time)
  * @method int getUpdatedAt()
  * @method bool isImipMessage()
@@ -106,6 +109,7 @@ class Message extends Entity implements JsonSerializable {
 	protected $flagImportant = false;
 	protected $flagMdnsent;
 	protected $previewText;
+	protected $summary;
 	protected $imipMessage = false;
 	protected $imipProcessed = false;
 	protected $imipError = false;
@@ -129,6 +133,12 @@ class Message extends Entity implements JsonSerializable {
 
 	/** @var Tag[] */
 	private $tags = [];
+
+	/** @var Avatar|null */
+	private $avatar;
+
+	/** @var bool */
+	private $fetchAvatarFromClient = false;
 
 	public function __construct() {
 		$this->from = new AddressList([]);
@@ -280,7 +290,26 @@ class Message extends Entity implements JsonSerializable {
 			);
 		}
 	}
+	/**
+	 * @param Avatar|null $avatar
+	 * @return void
+	 */
+	public function setAvatar(?Avatar $avatar): void {
+		$this->avatar = $avatar;
+	}
 
+	public function setFetchAvatarFromClient(bool $fetchAvatarFromClient): void {
+		$this->fetchAvatarFromClient = $fetchAvatarFromClient;
+	}
+
+	/**
+	 * @return ?Avatar
+	 */
+	public function getAvatar(): ?Avatar {
+		return $this->avatar;
+	}
+
+	#[\Override]
 	#[ReturnTypeWillChange]
 	public function jsonSerialize() {
 		$tags = $this->getTags();
@@ -322,7 +351,14 @@ class Message extends Entity implements JsonSerializable {
 			'threadRootId' => $this->getThreadRootId(),
 			'imipMessage' => $this->isImipMessage(),
 			'previewText' => $this->getPreviewText(),
+			'summary' => $this->getSummary(),
 			'encrypted' => ($this->isEncrypted() === true),
+<<<<<<< HEAD
+=======
+			'mentionsMe' => $this->getMentionsMe(),
+			'avatar' => $this->avatar?->jsonSerialize(),
+			'fetchAvatarFromClient' => $this->fetchAvatarFromClient,
+>>>>>>> 5d13aacd343883b2c7ace01db7280a0664c0a6e4
 		];
 	}
 }

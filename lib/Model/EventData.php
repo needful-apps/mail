@@ -12,7 +12,7 @@ namespace OCA\Mail\Model;
 use JsonSerializable;
 use ReturnTypeWillChange;
 
-class EventData implements JsonSerializable {
+final class EventData implements JsonSerializable {
 
 	public function __construct(private string $summary,
 		private string $description) {
@@ -26,6 +26,7 @@ class EventData implements JsonSerializable {
 		return $this->description;
 	}
 
+	#[\Override]
 	#[ReturnTypeWillChange]
 	public function jsonSerialize() {
 		return [

@@ -90,8 +90,9 @@ class OutboxController extends Controller {
 	public function create(
 		int $accountId,
 		string $subject,
-		string $body,
-		string $editorBody,
+		?string $bodyPlain,
+		?string $bodyHtml,
+		?string $editorBody,
 		bool $isHtml,
 		bool $smimeSign,
 		bool $smimeEncrypt,
@@ -117,9 +118,10 @@ class OutboxController extends Controller {
 		$message->setAccountId($accountId);
 		$message->setAliasId($aliasId);
 		$message->setSubject($subject);
-		$message->setBody($body);
-		$message->setEditorBody($editorBody);
+		$message->setBodyPlain($bodyPlain);
+		$message->setBodyHtml($bodyHtml);
 		$message->setHtml($isHtml);
+		$message->setEditorBody($editorBody);
 		$message->setInReplyToMessageId($inReplyToMessageId);
 		$message->setSendAt($sendAt);
 		$message->setSmimeSign($smimeSign);
@@ -179,7 +181,8 @@ class OutboxController extends Controller {
 		int $id,
 		int $accountId,
 		string $subject,
-		string $body,
+		?string $bodyPlain,
+		?string $bodyHtml,
 		?string $editorBody,
 		bool $isHtml,
 		bool $smimeSign,
@@ -204,9 +207,10 @@ class OutboxController extends Controller {
 		$message->setAccountId($accountId);
 		$message->setAliasId($aliasId);
 		$message->setSubject($subject);
-		$message->setBody($body);
-		$message->setEditorBody($editorBody);
+		$message->setBodyPlain($bodyPlain);
+		$message->setBodyHtml($bodyHtml);
 		$message->setHtml($isHtml);
+		$message->setEditorBody($editorBody);
 		$message->setInReplyToMessageId($inReplyToMessageId);
 		$message->setSendAt($sendAt);
 		$message->setSmimeSign($smimeSign);
