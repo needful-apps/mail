@@ -236,9 +236,10 @@
 			</article>
 			<MicrosoftAdminOauthSettings :tenant-id="microsoftOauthTenantId" :client-id="microsoftOauthClientId" />
 		</div>
-<<<<<<< HEAD
-		<SupabaseAdminSettings />
-=======
+		<div class="app-description">
+			<h3>{{ t('mail', 'Supabase integration') }}</h3>
+			<SupabaseAdminSettings />
+		</div>
 		<div class="app-description">
 			<h3>{{ t('mail', 'User Interface Preference Defaults') }}</h3>
 			<article>
@@ -269,7 +270,6 @@
 				</p>
 			</article>
 		</div>
->>>>>>> 5d13aacd343883b2c7ace01db7280a0664c0a6e4
 	</SettingsSection>
 </template>
 

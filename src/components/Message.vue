@@ -58,7 +58,6 @@
 				</template>
 				{{ replyButtonLabel }}
 			</NcButton>
-			</div>
 			<SupabaseActions :selected-mail="message" />
 		</div>
 	</div>
@@ -77,16 +76,11 @@ import MessageEncryptedBody from './MessageEncryptedBody.vue'
 import MessageHTMLBody from './MessageHTMLBody.vue'
 import MessagePlainTextBody from './MessagePlainTextBody.vue'
 import Imip from './Imip.vue'
-<<<<<<< HEAD
 import SupabaseActions from './SupabaseActions.vue'
-import LockOffIcon from 'vue-material-design-icons/LockOff.vue'
-import ReplyIcon from 'vue-material-design-icons/Reply.vue'
-=======
 import LockOffIcon from 'vue-material-design-icons/LockOffOutline.vue'
 import ReplyIcon from 'vue-material-design-icons/ReplyOutline.vue'
 import { mapStores } from 'pinia'
 import useMainStore from '../store/mainStore.js'
->>>>>>> 5d13aacd343883b2c7ace01db7280a0664c0a6e4
 
 export default {
 	name: 'Message',
