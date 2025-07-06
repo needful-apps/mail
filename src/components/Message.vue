@@ -58,6 +58,8 @@
 				</template>
 				{{ replyButtonLabel }}
 			</NcButton>
+			</div>
+			<SupabaseActions :selected-mail="message" />
 		</div>
 	</div>
 </template>
@@ -75,6 +77,7 @@ import MessageEncryptedBody from './MessageEncryptedBody.vue'
 import MessageHTMLBody from './MessageHTMLBody.vue'
 import MessagePlainTextBody from './MessagePlainTextBody.vue'
 import Imip from './Imip.vue'
+import SupabaseActions from './SupabaseActions.vue'
 import LockOffIcon from 'vue-material-design-icons/LockOff.vue'
 import ReplyIcon from 'vue-material-design-icons/Reply.vue'
 
@@ -88,6 +91,7 @@ export default {
 		MessagePlainTextBody,
 		PhishingWarning,
 		Imip,
+		SupabaseActions,
 		LockOffIcon,
 		ReplyIcon,
 		NcButton,

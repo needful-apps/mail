@@ -253,6 +253,7 @@
 			</article>
 			<MicrosoftAdminOauthSettings :tenant-id="microsoftOauthTenantId" :client-id="microsoftOauthClientId" />
 		</div>
+		<SupabaseAdminSettings />
 	</SettingsSection>
 </template>
 
@@ -261,6 +262,7 @@ import ButtonVue from '@nextcloud/vue/dist/Components/NcButton.js'
 import GmailAdminOauthSettings from './GmailAdminOauthSettings.vue'
 import logger from '../../logger.js'
 import MicrosoftAdminOauthSettings from './MicrosoftAdminOauthSettings.vue'
+import SupabaseAdminSettings from './SupabaseAdminSettings.vue'
 import { showError, showSuccess } from '@nextcloud/dialogs'
 import { loadState } from '@nextcloud/initial-state'
 import ProvisioningSettings from './ProvisioningSettings.vue'
@@ -292,6 +294,7 @@ export default {
 		GmailAdminOauthSettings,
 		AntiSpamSettings,
 		MicrosoftAdminOauthSettings,
+		SupabaseAdminSettings,
 		ProvisioningSettings,
 		SettingsSection,
 		ButtonVue,

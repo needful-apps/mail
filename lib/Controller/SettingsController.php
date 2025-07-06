@@ -124,4 +124,18 @@ class SettingsController extends Controller {
 		return new JSONResponse([]);
 	}
 
+	/**
+	 * @NoAdminRequired
+	 */
+	public function getSupabaseSettings(): JSONResponse {
+		$url = $this->config->getAppValue('mail', 'supabase_url', '');
+		$token = $this->config->getAppValue('mail', 'supabase_service_token', '');
+		return new JSONResponse(['url' => $url, 'token' => $token]);
+	}
+
+	public function saveSupabaseSettings(string $url, string $token): JSONResponse {
+		$this->config->setAppValue('mail', 'supabase_url', $url);
+		$this->config->setAppValue('mail', 'supabase_service_token', $token);
+		return new JSONResponse(['status' => 'success']);
+	}
 }
